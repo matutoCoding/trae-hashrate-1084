@@ -57,7 +57,7 @@ const FryingPage: React.FC = () => {
   const loadData = useCallback(() => {
     setMarinatingRecords(marinatingService.getAll());
     setFryingRecords(fryingService.getAll());
-    setActiveBatches(batchService.getActive());
+    setActiveBatches(batchService.getActiveWithProgress() as any);
   }, []);
 
   useEffect(() => {
@@ -432,12 +432,28 @@ const FryingPage: React.FC = () => {
                 <>
                   <View className={styles.formGroup}>
                     <Text className={styles.formLabel}>关联批次</Text>
-                    <View className={styles.formRadioGroup}>
-                      <Text className={`${styles.formRadioItem} ${!marinatingForm.batchId ? styles.active : ''}`} onClick={() => setMarinatingForm({ ...marinatingForm, batchId: '' })}>不关联</Text>
+                    <View className={styles.batchSelectList}>
+                      <View
+                        className={`${styles.batchSelectItem} ${!marinatingForm.batchId ? styles.active : ''}`}
+                        onClick={() => setMarinatingForm({ ...marinatingForm, batchId: '' })}
+                      >
+                        <Text className={styles.batchNo}>不关联批次</Text>
+                        <Text className={styles.batchDesc}>独立记录，不参与批次追踪</Text>
+                      </View>
                       {activeBatches.map(b => (
-                        <Text key={b.id} className={`${styles.formRadioItem} ${marinatingForm.batchId === b.id ? styles.active : ''}`} onClick={() => setMarinatingForm({ ...marinatingForm, batchId: b.id })}>
-                          {b.batchNo} ({b.beanWeight}kg)
-                        </Text>
+                        <View
+                          key={b.id}
+                          className={`${styles.batchSelectItem} ${marinatingForm.batchId === b.id ? styles.active : ''}`}
+                          onClick={() => setMarinatingForm({ ...marinatingForm, batchId: b.id })}
+                        >
+                          <View className={styles.batchSelectHeader}>
+                            <Text className={styles.batchNo}>{b.batchNo}</Text>
+                            <Text className={styles.batchStep}>{(b as any).currentStep || '待开始'}</Text>
+                          </View>
+                          <View className={styles.batchSelectBody}>
+                            <Text className={styles.batchDesc}>{b.beanType} · {b.beanWeight}kg</Text>
+                          </View>
+                        </View>
                       ))}
                     </View>
                   </View>
@@ -550,12 +566,28 @@ const FryingPage: React.FC = () => {
                 <>
                   <View className={styles.formGroup}>
                     <Text className={styles.formLabel}>关联批次</Text>
-                    <View className={styles.formRadioGroup}>
-                      <Text className={`${styles.formRadioItem} ${!fryingForm.batchId ? styles.active : ''}`} onClick={() => setFryingForm({ ...fryingForm, batchId: '' })}>不关联</Text>
+                    <View className={styles.batchSelectList}>
+                      <View
+                        className={`${styles.batchSelectItem} ${!fryingForm.batchId ? styles.active : ''}`}
+                        onClick={() => setFryingForm({ ...fryingForm, batchId: '' })}
+                      >
+                        <Text className={styles.batchNo}>不关联批次</Text>
+                        <Text className={styles.batchDesc}>独立记录，不参与批次追踪</Text>
+                      </View>
                       {activeBatches.map(b => (
-                        <Text key={b.id} className={`${styles.formRadioItem} ${fryingForm.batchId === b.id ? styles.active : ''}`} onClick={() => setFryingForm({ ...fryingForm, batchId: b.id })}>
-                          {b.batchNo} ({b.beanWeight}kg)
-                        </Text>
+                        <View
+                          key={b.id}
+                          className={`${styles.batchSelectItem} ${fryingForm.batchId === b.id ? styles.active : ''}`}
+                          onClick={() => setFryingForm({ ...fryingForm, batchId: b.id })}
+                        >
+                          <View className={styles.batchSelectHeader}>
+                            <Text className={styles.batchNo}>{b.batchNo}</Text>
+                            <Text className={styles.batchStep}>{(b as any).currentStep || '待开始'}</Text>
+                          </View>
+                          <View className={styles.batchSelectBody}>
+                            <Text className={styles.batchDesc}>{b.beanType} · {b.beanWeight}kg</Text>
+                          </View>
+                        </View>
                       ))}
                     </View>
                   </View>

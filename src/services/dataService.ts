@@ -101,9 +101,47 @@ export const batchService = {
 
   generateBatchNo(): string {
     const today = getTodayDate().replace(/-/g, '');
-    const existing = this.getAll().filter(r => r.batchNo.startsWith(today));
-    const seq = String(existing.length + 1).padStart(3, '0');
+    const existing = this.getAll().filter(r => r.batchNo.startsWith(`PC${today}`));
+    let maxSeq = 0;
+    existing.forEach(r => {
+      const seqStr = r.batchNo.slice(`PC${today}`.length);
+      const seq = parseInt(seqStr, 10);
+      if (!isNaN(seq) && seq > maxSeq) {
+        maxSeq = seq;
+      }
+    });
+    const seq = String(maxSeq + 1).padStart(3, '0');
     return `PC${today}${seq}`;
+  },
+
+  getBatchProgress(batch: BatchRecord): { currentStep: string; stepIndex: number; totalSteps: number } {
+    const steps = ['soaking', 'grinding', 'coagulating', 'pressing', 'marinating', 'frying'];
+    const stepNames = ['黄豆浸泡', '磨浆', '点浆凝固', '压制成型', '卤制', '油炸'];
+    let currentStep = '待开始';
+    let stepIndex = -1;
+
+    for (let i = steps.length - 1; i >= 0; i--) {
+      const stepKey = steps[i] as keyof BatchRecord;
+      if (batch[stepKey]) {
+        stepIndex = i;
+        currentStep = stepNames[i];
+        break;
+      }
+    }
+
+    return { currentStep, stepIndex, totalSteps: steps.length };
+  },
+
+  getActiveWithProgress(): (BatchRecord & { currentStep: string; stepIndex: number })[] {
+    const active = this.getActive();
+    return active.map(batch => {
+      const progress = this.getBatchProgress(batch);
+      return { ...batch, currentStep: progress.currentStep, stepIndex: progress.stepIndex };
+    });
+  },
+
+  completeBatch(id: string): BatchRecord | null {
+    return this.update(id, { status: 'completed' });
   },
 
   getBatchDetail(id: string) {
@@ -129,10 +167,25 @@ export const batchService = {
       ? storage.get<FryingRecord[]>(STORAGE_KEYS.FRYING, []).find(r => r.id === batch.fryingId)
       : undefined;
 
+    const beanWeightKg = batch.beanWeight;
+    const soyMilkKg = grinding?.soyMilkAmount ? grinding.soyMilkAmount * 0.5 : 0;
+    const okaraKg = grinding?.okaraAmount ? grinding.okaraAmount * 0.5 : 0;
+    const pressWeightKg = pressing?.pressWeight || 0;
+    const marinatingAmountKg = marinating?.amount ? marinating.amount * 0.5 : 0;
+    const fryingAmountKg = frying?.amount ? frying.amount * 0.5 : 0;
+
     let yieldRate = 0;
     if (pressing && batch.beanWeight > 0) {
       yieldRate = (pressing.pressWeight / batch.beanWeight) * 100;
     }
+
+    const weightLoss = {
+      beanToMilk: beanWeightKg > 0 && soyMilkKg > 0 ? soyMilkKg - beanWeightKg : 0,
+      milkToPress: soyMilkKg > 0 && pressWeightKg > 0 ? soyMilkKg - pressWeightKg : 0,
+      pressToMarinade: pressWeightKg > 0 && marinatingAmountKg > 0 ? pressWeightKg - marinatingAmountKg : 0,
+      marinadeToFry: marinatingAmountKg > 0 && fryingAmountKg > 0 ? marinatingAmountKg - fryingAmountKg : 0,
+      finalProduct: fryingAmountKg > 0 ? fryingAmountKg : (marinatingAmountKg > 0 ? marinatingAmountKg : pressWeightKg)
+    };
 
     return {
       batch,
@@ -142,7 +195,16 @@ export const batchService = {
       pressing,
       marinating,
       frying,
-      yieldRate
+      yieldRate,
+      weights: {
+        beanWeightKg,
+        soyMilkKg,
+        okaraKg,
+        pressWeightKg,
+        marinatingAmountKg,
+        fryingAmountKg,
+        ...weightLoss
+      }
     };
   }
 };
@@ -416,6 +478,55 @@ export const deliveryService = {
     });
     deliveryService.update(order.id, { incomeGenerated: true });
     return record;
+  },
+
+  getCustomers(): string[] {
+    const orders = this.getAll();
+    const customerSet = new Set<string>();
+    orders.forEach(o => customerSet.add(o.customer));
+    return Array.from(customerSet).sort();
+  },
+
+  getCustomerOrders(customer: string): DeliveryOrder[] {
+    return this.getAll()
+      .filter(o => o.customer === customer)
+      .sort((a, b) => {
+        const dateA = `${a.deliveryDate} ${a.deliveryTime}`;
+        const dateB = `${b.deliveryDate} ${b.deliveryTime}`;
+        return dateB.localeCompare(dateA);
+      });
+  },
+
+  getCustomerLedger(customer: string) {
+    const orders = this.getCustomerOrders(customer);
+    const totalOrders = orders.length;
+    const totalQuantity = orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
+    const totalAmount = orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0), 0);
+
+    const generatedIncome = orders
+      .filter(o => o.incomeGenerated)
+      .reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0), 0);
+
+    const pendingIncome = orders
+      .filter(o => o.status === 'delivered' && !o.incomeGenerated)
+      .reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0), 0);
+
+    const pendingOrders = orders.filter(o => o.status === 'pending').length;
+    const deliveringOrders = orders.filter(o => o.status === 'delivering').length;
+    const deliveredOrders = orders.filter(o => o.status === 'delivered').length;
+
+    return {
+      customer,
+      totalOrders,
+      totalQuantity,
+      totalAmount,
+      generatedIncome,
+      pendingIncome,
+      pendingOrders,
+      deliveringOrders,
+      deliveredOrders,
+      orders
+    };
   }
 };
 

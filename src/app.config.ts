@@ -9,7 +9,8 @@ export default defineAppConfig({
     'pages/grinding/index',
     'pages/coagulating/index',
     'pages/pressing/index',
-    'pages/batch/index'
+    'pages/batch/index',
+    'pages/customerLedger/index'
   ],
   window: {
     backgroundTextStyle: 'light',

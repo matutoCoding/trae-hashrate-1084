@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import { batchService, getNowTime } from '@/services/dataService';
+import { batchService } from '@/services/dataService';
 import type {
   BatchRecord,
   SoakingRecord,
@@ -109,15 +109,17 @@ const BatchDetailPage: React.FC = () => {
       }
       case 1: {
         const r = record as GrindingRecord;
+        const soyMilkKg = r.soyMilkAmount ? (r.soyMilkAmount * 0.5).toFixed(1) : '-';
+        const okaraKg = r.okaraAmount ? (r.okaraAmount * 0.5).toFixed(1) : '-';
         return (
           <View className={styles.stepInfo}>
             <View className={styles.stepInfoItem}>
               <Text className={styles.stepLabel}>豆浆量:</Text>
-              <Text className={styles.stepValue}>{r.soyMilkAmount ?? '-'}L</Text>
+              <Text className={styles.stepValue}>{soyMilkKg}kg</Text>
             </View>
             <View className={styles.stepInfoItem}>
               <Text className={styles.stepLabel}>豆渣量:</Text>
-              <Text className={styles.stepValue}>{r.okaraAmount ?? '-'}kg</Text>
+              <Text className={styles.stepValue}>{okaraKg}kg</Text>
             </View>
             <View className={styles.stepInfoItem}>
               <Text className={styles.stepLabel}>研磨次数:</Text>
@@ -209,6 +211,23 @@ const BatchDetailPage: React.FC = () => {
 
   const yieldPercent = Math.min(yieldRate, 100);
 
+  const handleArchive = () => {
+    Taro.showModal({
+      title: '确认归档',
+      content: '归档后批次将标记为已完成，确定要归档吗？',
+      success: (res) => {
+        if (res.confirm) {
+          batchService.completeBatch(batch.id);
+          loadData();
+          Taro.showToast({ title: '已归档', icon: 'success' });
+        }
+      }
+    });
+  };
+
+  const weights = detail.weights || {};
+  const hasWeights = weights.beanWeightKg > 0;
+
   return (
     <ScrollView scrollY className={styles.pageContainer}>
       <View className={styles.header}>
@@ -255,6 +274,88 @@ const BatchDetailPage: React.FC = () => {
           </View>
           <Text className={styles.yieldText}>{yieldRate.toFixed(1)}%</Text>
         </View>
+
+        {hasWeights && (
+          <View className={styles.trackSection}>
+            <Text className={styles.sectionTitle}>📦 成品追踪</Text>
+            <View className={styles.trackList}>
+              <View className={styles.trackItem}>
+                <Text className={styles.trackLabel}>投豆量</Text>
+                <Text className={styles.trackValue}>{weights.beanWeightKg.toFixed(1)}kg</Text>
+              </View>
+              {weights.soyMilkKg > 0 && (
+                <View className={styles.trackItem}>
+                  <Text className={styles.trackLabel}>豆浆量</Text>
+                  <Text className={styles.trackValue}>{weights.soyMilkKg.toFixed(1)}kg</Text>
+                </View>
+              )}
+              {weights.okaraKg > 0 && (
+                <View className={styles.trackItem}>
+                  <Text className={styles.trackLabel}>豆渣量</Text>
+                  <Text className={styles.trackValue}>{weights.okaraKg.toFixed(1)}kg</Text>
+                </View>
+              )}
+              {weights.pressWeightKg > 0 && (
+                <View className={styles.trackItem}>
+                  <Text className={styles.trackLabel}>压制成品</Text>
+                  <Text className={styles.trackValue}>{weights.pressWeightKg.toFixed(1)}kg</Text>
+                </View>
+              )}
+              {weights.marinatingAmountKg > 0 && (
+                <View className={styles.trackItem}>
+                  <Text className={styles.trackLabel}>卤制成品</Text>
+                  <Text className={styles.trackValue}>{weights.marinatingAmountKg.toFixed(1)}kg</Text>
+                </View>
+              )}
+              {weights.fryingAmountKg > 0 && (
+                <View className={styles.trackItem}>
+                  <Text className={styles.trackLabel}>油炸成品</Text>
+                  <Text className={styles.trackValue}>{weights.fryingAmountKg.toFixed(1)}kg</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {hasWeights && (weights.milkToPress > 0 || weights.pressToMarinade > 0 || weights.marinadeToFry > 0) && (
+          <View className={styles.lossSection}>
+            <Text className={styles.sectionTitle}>📉 损耗分析</Text>
+            <View className={styles.lossList}>
+              {weights.milkToPress > 0 && (
+                <View className={styles.lossItem}>
+                  <Text className={styles.lossLabel}>豆浆→压制</Text>
+                  <Text className={styles.lossValue}>-{weights.milkToPress.toFixed(1)}kg</Text>
+                </View>
+              )}
+              {weights.pressToMarinade > 0 && (
+                <View className={styles.lossItem}>
+                  <Text className={styles.lossLabel}>压制→卤制</Text>
+                  <Text className={styles.lossValue}>-{weights.pressToMarinade.toFixed(1)}kg</Text>
+                </View>
+              )}
+              {weights.marinadeToFry > 0 && (
+                <View className={styles.lossItem}>
+                  <Text className={styles.lossLabel}>卤制→油炸</Text>
+                  <Text className={styles.lossValue}>-{weights.marinadeToFry.toFixed(1)}kg</Text>
+                </View>
+              )}
+              {weights.finalProduct > 0 && (
+                <View className={styles.lossItem}>
+                  <Text className={styles.lossLabel}>最终成品</Text>
+                  <Text className={styles.lossFinal}>{weights.finalProduct.toFixed(1)}kg</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {batch.status === 'active' && (
+          <View className={styles.archiveSection}>
+            <Text className={styles.archiveBtn} onClick={handleArchive}>
+              归档批次
+            </Text>
+          </View>
+        )}
       </View>
     </ScrollView>
   );

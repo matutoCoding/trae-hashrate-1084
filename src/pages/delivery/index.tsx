@@ -243,7 +243,17 @@ const DeliveryPage: React.FC = () => {
             {orders.map(order => (
               <View key={order.id} className={styles.orderCard}>
                 <View className={styles.orderHeader}>
-                  <Text className={styles.orderCustomer}>{order.customer}</Text>
+                  <Text
+                    className={styles.orderCustomer}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      Taro.navigateTo({
+                        url: `/pages/customerLedger/index?customer=${encodeURIComponent(order.customer)}`
+                      });
+                    }}
+                  >
+                    {order.customer} →
+                  </Text>
                   <Text className={`${styles.statusTag} ${styles[statusColorMap[order.status]]}`}>
                     {statusTextMap[order.status]}
                   </Text>

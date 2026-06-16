@@ -1,0 +1,243 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.header {
+  padding: $spacing-lg $page-padding;
+  background: linear-gradient(135deg, #29B6F6 0%, #0288D1 100%);
+  color: $color-text-white;
+}
+
+.backBtn {
+  font-size: $font-size-lg;
+  margin-bottom: $spacing-sm;
+  padding: $spacing-xs 0;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+}
+
+.headerDesc {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+  margin-top: $spacing-xs;
+}
+
+.summaryGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-lg;
+}
+
+.summaryItem {
+  flex: 1;
+  min-width: 30%;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  text-align: center;
+}
+
+.summaryValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+
+  &.income {
+    color: #C8E6C9;
+  }
+
+  &.pending {
+    color: #FFE0B2;
+  }
+}
+
+.summaryLabel {
+  font-size: $font-size-xs;
+  opacity: 0.9;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.content {
+  padding: $spacing-md $page-padding;
+}
+
+.section {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.sectionHeader .sectionTitle {
+  margin-bottom: 0;
+}
+
+.sectionCount {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.statsRow {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.statsItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.statsNum {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.statsLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.orderCard {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.orderDate {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-xs;
+}
+
+.orderDateText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.orderTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.statusTag {
+  flex-shrink: 0;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+
+  &.pending {
+    background: rgba(134, 144, 156, 0.15);
+    color: #86909C;
+  }
+
+  &.inProgress {
+    background: rgba(41, 182, 246, 0.15);
+    color: #0288D1;
+  }
+
+  &.completed {
+    background: rgba(76, 175, 80, 0.15);
+    color: $color-success;
+  }
+}
+
+.orderItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.orderItem {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.orderFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: $spacing-sm;
+}
+
+.orderAmount {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-xs;
+}
+
+.amountLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.amountValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.generateBtn {
+  padding: $spacing-xs $spacing-md;
+  background: rgba(76, 175, 80, 0.1);
+  color: $color-success;
+  font-size: $font-size-xs;
+  border-radius: $radius-sm;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.incomeTag {
+  padding: $spacing-xs $spacing-md;
+  background: rgba(76, 175, 80, 0.15);
+  color: $color-success;
+  font-size: $font-size-xs;
+  border-radius: $radius-sm;
+}

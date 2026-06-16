@@ -30,7 +30,7 @@ const CoagulatingPage: React.FC = () => {
   const loadData = useCallback(() => {
     const data = coagulatingService.getAll();
     setRecords(data);
-    const batches = batchService.getActive();
+    const batches = batchService.getActiveWithProgress() as any;
     setActiveBatches(batches);
   }, []);
 
@@ -224,12 +224,25 @@ const CoagulatingPage: React.FC = () => {
             <ScrollView scrollY className={styles.formBody}>
               <View className={styles.formGroup}>
                 <Text className={styles.formLabel}>关联批次</Text>
-                <View className={styles.formRadioGroup}>
-                  <Text className={`${styles.formRadioItem} ${!formData.batchId ? styles.active : ''}`} onClick={() => setFormData({ ...formData, batchId: '' })}>不关联</Text>
+                <View className={styles.batchSelectList}>
+                  <View className={`${styles.batchSelectItem} ${!formData.batchId ? styles.active : ''}`} onClick={() => setFormData({ ...formData, batchId: '' })}>
+                    <View className={styles.batchSelectHeader}>
+                      <Text className={styles.batchNo}>不关联批次</Text>
+                    </View>
+                    <View className={styles.batchSelectBody}>
+                      <Text className={styles.batchDesc}>独立记录，不参与批次追踪</Text>
+                    </View>
+                  </View>
                   {activeBatches.map(b => (
-                    <Text key={b.id} className={`${styles.formRadioItem} ${formData.batchId === b.id ? styles.active : ''}`} onClick={() => setFormData({ ...formData, batchId: b.id })}>
-                      {b.batchNo} ({b.beanWeight}kg)
-                    </Text>
+                    <View key={b.id} className={`${styles.batchSelectItem} ${formData.batchId === b.id ? styles.active : ''}`} onClick={() => setFormData({ ...formData, batchId: b.id })}>
+                      <View className={styles.batchSelectHeader}>
+                        <Text className={styles.batchNo}>{b.batchNo}</Text>
+                        <Text className={styles.batchStep}>{(b as any).currentStep || '待开始'}</Text>
+                      </View>
+                      <View className={styles.batchSelectBody}>
+                        <Text className={styles.batchDesc}>{b.beanType} · {b.beanWeight}kg</Text>
+                      </View>
+                    </View>
                   ))}
                 </View>
               </View>

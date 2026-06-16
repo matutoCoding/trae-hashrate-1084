@@ -364,3 +364,50 @@
   color: $color-text-tertiary;
   font-size: $font-size-md;
 }
+
+.batchSelectList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.batchSelectItem {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-md;
+
+  &.active {
+    border-color: #81C784;
+    background: rgba(129, 199, 132, 0.08);
+  }
+}
+
+.batchSelectHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.batchNo {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.batchStep {
+  font-size: $font-size-xs;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(129, 199, 132, 0.15);
+  color: #81C784;
+  border-radius: $radius-sm;
+}
+
+.batchSelectBody {
+  display: flex;
+}
+
+.batchDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}

@@ -132,8 +132,12 @@
 .orderCustomer {
   font-size: $font-size-md;
   font-weight: $font-semibold;
-  color: $color-text-primary;
+  color: #0288D1;
   flex: 1;
+
+  &:active {
+    opacity: 0.7;
+  }
 }
 
 .statusTag {

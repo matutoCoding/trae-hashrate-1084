@@ -403,3 +403,56 @@
   color: $color-text-tertiary;
   font-size: $font-size-md;
 }
+
+.batchSelectList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.batchSelectItem {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-md;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: #BA68C8;
+    background: rgba(186, 104, 200, 0.08);
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.batchSelectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.batchNo {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.batchStep {
+  font-size: $font-size-xs;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(186, 104, 200, 0.15);
+  color: #BA68C8;
+  border-radius: $radius-sm;
+}
+
+.batchSelectBody {
+  display: flex;
+}
+
+.batchDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
