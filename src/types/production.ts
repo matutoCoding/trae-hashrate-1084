@@ -106,21 +106,16 @@ export interface FryingRecord {
 // 配送订单
 export interface DeliveryOrder {
   id: string;
-  customerName: string;
-  address: string;
-  phone: string;
-  items: DeliveryItem[];
-  deliveryTime: string;
-  status: 'pending' | 'delivering' | 'completed';
-  totalAmount: number;
-  note?: string;
-}
-
-export interface DeliveryItem {
-  productName: string;
+  customer: string;
+  product: string;
   quantity: number;
-  unit: string;
-  price: number;
+  deliveryDate: string;
+  deliveryTime: string;
+  address?: string;
+  contact?: string;
+  phone?: string;
+  status: 'pending' | 'delivering' | 'delivered' | 'cancelled';
+  note?: string;
 }
 
 // 收支记录
@@ -130,8 +125,8 @@ export interface AccountingRecord {
   category: string;
   amount: number;
   date: string;
-  description: string;
-  operator: string;
+  description?: string;
+  note?: string;
 }
 
 // 今日统计

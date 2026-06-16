@@ -221,57 +221,53 @@ export const fryingRecords: FryingRecord[] = [
 export const deliveryOrders: DeliveryOrder[] = [
   {
     id: 'd001',
-    customerName: '张记早餐店',
+    customer: '张记早餐店',
+    product: '嫩豆腐',
+    quantity: 20,
+    deliveryDate: '2024-01-16',
+    deliveryTime: '07:30',
     address: '城东路128号',
+    contact: '张老板',
     phone: '138****1234',
-    items: [
-      { productName: '嫩豆腐', quantity: 20, unit: '斤', price: 3.5 },
-      { productName: '豆浆', quantity: 50, unit: '杯', price: 2 }
-    ],
-    deliveryTime: '2024-01-16 07:30',
-    status: 'completed',
-    totalAmount: 170,
+    status: 'delivered',
     note: '早上7点半前送到'
   },
   {
     id: 'd002',
-    customerName: '李记饭馆',
+    customer: '李记饭馆',
+    product: '老豆腐',
+    quantity: 30,
+    deliveryDate: '2024-01-16',
+    deliveryTime: '09:00',
     address: '人民路56号',
+    contact: '李老板',
     phone: '139****5678',
-    items: [
-      { productName: '老豆腐', quantity: 30, unit: '斤', price: 4 },
-      { productName: '油豆腐', quantity: 10, unit: '斤', price: 8 }
-    ],
-    deliveryTime: '2024-01-16 09:00',
-    status: 'delivering',
-    totalAmount: 200
+    status: 'delivering'
   },
   {
     id: 'd003',
-    customerName: '王家超市',
+    customer: '王家超市',
+    product: '豆干',
+    quantity: 15,
+    deliveryDate: '2024-01-16',
+    deliveryTime: '10:30',
     address: '建设街88号',
+    contact: '王经理',
     phone: '137****9012',
-    items: [
-      { productName: '五香豆干', quantity: 15, unit: '斤', price: 12 },
-      { productName: '千张', quantity: 10, unit: '斤', price: 6 }
-    ],
-    deliveryTime: '2024-01-16 10:30',
     status: 'pending',
-    totalAmount: 240,
     note: '放在收银台旁边'
   },
   {
     id: 'd004',
-    customerName: '陈记早餐铺',
+    customer: '陈记早餐铺',
+    product: '豆腐脑',
+    quantity: 30,
+    deliveryDate: '2024-01-16',
+    deliveryTime: '06:30',
     address: '幸福路32号',
+    contact: '陈师傅',
     phone: '136****3456',
-    items: [
-      { productName: '嫩豆腐', quantity: 15, unit: '斤', price: 3.5 },
-      { productName: '豆腐脑', quantity: 30, unit: '碗', price: 3 }
-    ],
-    deliveryTime: '2024-01-16 06:30',
-    status: 'completed',
-    totalAmount: 142.5
+    status: 'delivered'
   }
 ];
 
@@ -280,65 +276,65 @@ export const accountingRecords: AccountingRecord[] = [
   {
     id: 'a001',
     type: 'expense',
-    category: '原材料',
+    category: '黄豆采购',
     amount: 280,
     date: '2024-01-16',
     description: '采购东北大豆50kg',
-    operator: '王师傅'
+    note: '批发商送货上门'
   },
   {
     id: 'a002',
     type: 'expense',
-    category: '原材料',
+    category: '凝固剂',
     amount: 45,
     date: '2024-01-16',
     description: '采购石膏粉、盐卤',
-    operator: '李师傅'
+    note: '各5公斤'
   },
   {
     id: 'a003',
     type: 'expense',
-    category: '能源',
+    category: '燃料水电',
     amount: 30,
     date: '2024-01-16',
     description: '今日煤气费',
-    operator: '王师傅'
+    note: ''
   },
   {
     id: 'a004',
     type: 'income',
-    category: '批发收入',
+    category: '豆腐销售',
     amount: 520,
     date: '2024-01-16',
     description: '张记早餐店、李记饭馆等批发',
-    operator: '王师傅'
+    note: '月结客户'
   },
   {
     id: 'a005',
     type: 'income',
-    category: '零售收入',
+    category: '豆干销售',
     amount: 280,
     date: '2024-01-16',
-    description: '门店零售豆腐、豆干等',
-    operator: '李师傅'
+    description: '门店零售豆干、千张等',
+    note: '散客零售'
   },
   {
     id: 'a006',
     type: 'income',
-    category: '配送收入',
+    category: '油豆腐销售',
     amount: 240,
     date: '2024-01-16',
     description: '王家超市配送',
-    operator: '王师傅'
+    note: '每周二、四、六供货'
   },
   {
     id: 'a007',
     type: 'expense',
-    category: '人工',
+    category: '人工工资',
     amount: 200,
     date: '2024-01-16',
     description: '今日人工成本',
-    operator: '王师傅'
+    note: '王师傅+李师傅'
   }
 ];
 

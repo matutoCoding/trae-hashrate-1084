@@ -8,33 +8,43 @@
 
 .headerSection {
   padding: $spacing-lg $page-padding;
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  background: linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%);
   color: $color-text-white;
 }
 
 .headerTitle {
-  font-size: $font-size-lg;
+  font-size: $font-size-xl;
   font-weight: $font-weight-semibold;
-  margin-bottom: $spacing-md;
+  margin-bottom: $spacing-xs;
+}
+
+.headerDesc {
+  font-size: $font-size-sm;
+  opacity: 0.9;
 }
 
 .statsRow {
   display: flex;
-  justify-content: space-around;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
 }
 
 .statItem {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-md;
+  padding: $spacing-md;
   text-align: center;
 }
 
 .statValue {
-  font-size: $font-size-xxl;
+  font-size: $font-size-xl;
   font-weight: $font-bold;
   margin-bottom: $spacing-xs;
 }
 
 .statLabel {
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
   opacity: 0.9;
 }
 
@@ -57,7 +67,7 @@
 
 .addBtn {
   padding: $spacing-sm $spacing-lg;
-  background: $color-primary;
+  background: #29B6F6;
   color: $color-text-white;
   border-radius: $radius-button;
   font-size: $font-size-sm;
@@ -68,11 +78,43 @@
   }
 }
 
+.filterBar {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.filterTag {
+  padding: $spacing-xs $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  border: 1rpx solid $color-border;
+
+  &.active {
+    background: rgba(41, 182, 246, 0.1);
+    border-color: #29B6F6;
+    color: #29B6F6;
+    font-weight: $font-weight-medium;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
 .orderCard {
   background: $color-bg-card;
   border-radius: $radius-lg;
   padding: $spacing-lg;
-  margin-bottom: $spacing-md;
   box-shadow: $shadow-card;
 
   &:active {
@@ -87,29 +129,18 @@
   margin-bottom: $spacing-md;
 }
 
-.customerInfo {
+.orderCustomer {
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+  color: $color-text-primary;
   flex: 1;
 }
 
-.customerName {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: $spacing-xs;
-}
-
-.customerAddress {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs;
-}
-
-.orderStatus {
+.statusTag {
   flex-shrink: 0;
-  padding: $spacing-xs $spacing-md;
-  border-radius: $radius-round;
+  margin-left: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
   font-size: $font-size-xs;
   font-weight: $font-weight-medium;
 
@@ -119,132 +150,266 @@
   }
 
   &.delivering {
-    background: rgba(33, 150, 243, 0.15);
-    color: $color-info;
+    background: rgba(41, 182, 246, 0.15);
+    color: #29B6F6;
   }
 
-  &.completed {
+  &.delivered {
     background: rgba(76, 175, 80, 0.15);
     color: $color-success;
   }
+
+  &.cancelled {
+    background: rgba(244, 67, 54, 0.15);
+    color: $color-error;
+  }
 }
 
-.orderItems {
-  padding: $spacing-md 0;
+.orderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding-top: $spacing-md;
   border-top: 1rpx solid $color-divider;
-  border-bottom: 1rpx solid $color-divider;
 }
 
-.orderItem {
-  display: flex;
-  justify-content: space-between;
-  padding: $spacing-xs 0;
+.orderInfoRow {
   font-size: $font-size-sm;
-}
-
-.itemName {
   color: $color-text-secondary;
-}
-
-.itemQty {
-  color: $color-text-primary;
-  font-weight: $font-weight-medium;
-}
-
-.orderFooter {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: $spacing-md;
-}
-
-.deliveryTime {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: $spacing-xs;
 }
 
-.orderAmount {
-  font-size: $font-size-lg;
-  font-weight: $font-bold;
-  color: $color-primary;
+.orderInfoLabel {
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.orderInfoValue {
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  flex: 1;
 }
 
 .orderNote {
-  margin-top: $spacing-sm;
-  padding-top: $spacing-sm;
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
   border-top: 1rpx solid $color-divider;
-  font-size: $font-size-xs;
+  font-size: $font-size-sm;
   color: $color-text-tertiary;
 }
 
-.productionSummary {
-  background: $color-bg-card;
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  margin-bottom: $spacing-lg;
-  box-shadow: $shadow-card;
+.orderActions {
+  margin-top: $spacing-md;
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
 }
 
-.summaryTitle {
-  font-size: $font-size-md;
+.actionBtn {
+  padding: $spacing-xs $spacing-md;
+  font-size: $font-size-xs;
+  border-radius: $radius-sm;
+  background: $color-bg-page;
+  color: $color-text-secondary;
+
+  &.primary {
+    background: rgba(41, 182, 246, 0.1);
+    color: #29B6F6;
+  }
+
+  &.success {
+    background: rgba(76, 175, 80, 0.1);
+    color: $color-success;
+  }
+
+  &.danger {
+    background: rgba(244, 67, 54, 0.1);
+    color: $color-error;
+  }
+}
+
+.formOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.formSheet {
+  width: 100%;
+  max-height: 85vh;
+  background: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.formHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.formTitle {
+  font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
-  margin-bottom: $spacing-md;
 }
 
-.productionGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.formClose {
+  font-size: $font-size-xl;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.formBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-lg;
+}
+
+.formGroup {
+  margin-bottom: $spacing-lg;
+}
+
+.formLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.formInput {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-page;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  box-sizing: border-box;
+}
+
+.formTextarea {
+  width: 100%;
+  min-height: 160rpx;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+.formRow {
+  display: flex;
   gap: $spacing-md;
 }
 
-.productionItem {
-  text-align: center;
-  padding: $spacing-md;
-  background: $color-bg-page;
-  border-radius: $radius-md;
+.formRowItem {
+  flex: 1;
 }
 
-.productionValue {
-  font-size: $font-size-xl;
-  font-weight: $font-bold;
-  color: $color-primary;
-  margin-bottom: $spacing-xs;
-}
-
-.productionLabel {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-}
-
-.filterBar {
+.formQuickOptions {
   display: flex;
+  flex-wrap: wrap;
   gap: $spacing-sm;
-  margin-bottom: $spacing-md;
-  overflow-x: auto;
-  @include scroll-x-container;
+  margin-bottom: $spacing-sm;
 }
 
-.filterTag {
-  @include scroll-x-item(auto);
+.quickOption {
   padding: $spacing-xs $spacing-md;
-  background: $color-bg-card;
-  border-radius: $radius-round;
+  background: $color-bg-page;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+
+  &.active {
+    background: rgba(41, 182, 246, 0.1);
+    border-color: #29B6F6;
+    color: #29B6F6;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.formRadioGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.formRadioItem {
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-page;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-button;
   font-size: $font-size-sm;
   color: $color-text-secondary;
-  white-space: nowrap;
-  transition: all $transition-base;
 
-  &.filterActive {
-    background: $color-primary;
-    color: $color-text-white;
+  &.active {
+    background: rgba(41, 182, 246, 0.1);
+    border-color: #29B6F6;
+    color: #29B6F6;
     font-weight: $font-weight-medium;
   }
 
   &:active {
     opacity: 0.8;
   }
+}
+
+.formFooter {
+  padding: $spacing-lg;
+  padding-bottom: calc($spacing-lg + env(safe-area-inset-bottom));
+  border-top: 1rpx solid $color-divider;
+  display: flex;
+  gap: $spacing-md;
+}
+
+.formBtn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+
+  &.btnCancel {
+    background: $color-bg-page;
+    color: $color-text-secondary;
+  }
+
+  &.btnSubmit {
+    background: #29B6F6;
+    color: $color-text-white;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.emptyState {
+  padding: $spacing-xl 0;
+  text-align: center;
+  color: $color-text-tertiary;
+  font-size: $font-size-md;
 }

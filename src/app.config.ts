@@ -4,7 +4,11 @@ export default defineAppConfig({
     'pages/production/index',
     'pages/frying/index',
     'pages/delivery/index',
-    'pages/accounting/index'
+    'pages/accounting/index',
+    'pages/soaking/index',
+    'pages/grinding/index',
+    'pages/coagulating/index',
+    'pages/pressing/index'
   ],
   window: {
     backgroundTextStyle: 'light',

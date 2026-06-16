@@ -8,7 +8,7 @@
 
 .headerSection {
   padding: $spacing-lg $page-padding;
-  background: linear-gradient(135deg, #FF8A65 0%, #FF7043 100%);
+  background: linear-gradient(135deg, #BA68C8 0%, #AB47BC 100%);
   color: $color-text-white;
 }
 
@@ -33,20 +33,16 @@
   flex: 1;
   padding: $spacing-sm 0;
   text-align: center;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: $radius-button;
-  font-size: $font-size-md;
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.15);
+  font-size: $font-size-sm;
+  color: $color-text-white;
   transition: all $transition-base;
 
   &.active {
-    background: $color-text-white;
-    color: #FF7043;
+    background: $color-bg-card;
+    color: $color-primary;
     font-weight: $font-weight-semibold;
-  }
-
-  &:active {
-    opacity: 0.8;
   }
 }
 
@@ -94,7 +90,7 @@
 
 .addBtn {
   padding: $spacing-sm $spacing-lg;
-  background: #FF7043;
+  background: #BA68C8;
   color: $color-text-white;
   border-radius: $radius-button;
   font-size: $font-size-sm;
@@ -149,7 +145,7 @@
     color: #86909C;
   }
 
-  &.in_progress {
+  &.inProgress {
     background: rgba(245, 166, 35, 0.15);
     color: $color-primary;
   }
@@ -218,8 +214,8 @@
   color: $color-text-secondary;
 
   &.primary {
-    background: rgba(255, 112, 67, 0.1);
-    color: #FF7043;
+    background: rgba(186, 104, 200, 0.1);
+    color: #BA68C8;
   }
 
   &.success {
@@ -327,29 +323,43 @@
   flex: 1;
 }
 
-.formRadioGroup {
+.formSwitch {
   display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-sm;
+  align-items: center;
+  gap: $spacing-md;
 }
 
-.formRadioItem {
-  padding: $spacing-sm $spacing-md;
-  background: $color-bg-page;
-  border: 1rpx solid $color-border;
-  border-radius: $radius-button;
+.switchLabel {
   font-size: $font-size-sm;
   color: $color-text-secondary;
+}
+
+.switchToggle {
+  width: 80rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  background: $color-border;
+  position: relative;
+  transition: all $transition-base;
 
   &.active {
-    background: rgba(255, 112, 67, 0.1);
-    border-color: #FF7043;
-    color: #FF7043;
-    font-weight: $font-weight-medium;
+    background: $color-success;
   }
 
-  &:active {
-    opacity: 0.8;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 4rpx;
+    left: 4rpx;
+    width: 40rpx;
+    height: 40rpx;
+    background: white;
+    border-radius: 50%;
+    transition: all $transition-base;
+  }
+
+  &.active::after {
+    left: 36rpx;
   }
 }
 
@@ -378,7 +388,7 @@
   }
 
   &.btnSubmit {
-    background: #FF7043;
+    background: #BA68C8;
     color: $color-text-white;
   }
 

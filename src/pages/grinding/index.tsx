@@ -2,12 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, Input, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import {
-  marinatingService,
-  fryingService,
-  getNowTime
-} from '@/services/dataService';
-import type { MarinatingRecord, FryingRecord } from '@/types/production';
+import { grindingService, boilingService, getNowTime } from '@/services/dataService';
+import type { GrindingRecord, BoilingRecord } from '@/types/production';
 
 const statusTextMap: Record<string, string> = {
   pending: '待开始',
@@ -15,55 +11,42 @@ const statusTextMap: Record<string, string> = {
   completed: '已完成'
 };
 
-const productOptions = [
-  { key: 'dried_tofu', label: '豆干' },
-  { key: 'tofu_puff', label: '油豆腐' }
-];
-
-const marinadeOptions = ['五香卤水', '麻辣卤水', '香卤', '白卤'];
-
-const FryingPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'marinating' | 'frying'>('marinating');
-  const [marinatingRecords, setMarinatingRecords] = useState<MarinatingRecord[]>([]);
-  const [fryingRecords, setFryingRecords] = useState<FryingRecord[]>([]);
+const GrindingPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'grinding' | 'boiling'>('grinding');
+  const [grindingRecords, setGrindingRecords] = useState<GrindingRecord[]>([]);
+  const [boilingRecords, setBoilingRecords] = useState<BoilingRecord[]>([]);
   const [showForm, setShowForm] = useState(false);
 
-  const [marinatingForm, setMarinatingForm] = useState({
-    productType: 'dried_tofu' as 'dried_tofu' | 'tofu_puff',
-    amount: '',
-    marinadeType: '五香卤水',
+  const [grindingForm, setGrindingForm] = useState({
+    beanWeight: '',
+    waterAmount: '',
     startTime: '',
-    duration: '60',
-    temperature: '80',
-    operator: '李师傅',
+    grindCount: '2',
+    filterType: '纱布过滤',
+    soyMilkAmount: '',
+    okaraAmount: '',
+    operator: '王师傅',
     note: ''
   });
 
-  const [fryingForm, setFryingForm] = useState({
-    productType: 'tofu_puff' as 'tofu_puff' | 'fried_dried_tofu',
-    amount: '',
-    oilType: '菜籽油',
-    oilTemperature: '180',
+  const [boilingForm, setBoilingForm] = useState({
+    soyMilkAmount: '',
     startTime: '',
-    duration: '10',
+    boilingDuration: '20',
+    temperature: '100',
+    antiFoamUsed: false,
+    antiFoamAmount: '',
     operator: '王师傅',
     note: ''
   });
 
   const loadData = useCallback(() => {
-    setMarinatingRecords(marinatingService.getAll());
-    setFryingRecords(fryingService.getAll());
+    setGrindingRecords(grindingService.getAll());
+    setBoilingRecords(boilingService.getAll());
   }, []);
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      loadData();
-    }, 3000);
-    return () => clearInterval(timer);
   }, [loadData]);
 
   const handleRefresh = useCallback(() => {
@@ -74,25 +57,26 @@ const FryingPage: React.FC = () => {
   }, [loadData]);
 
   const handleAdd = () => {
-    if (activeTab === 'marinating') {
-      setMarinatingForm({
-        productType: 'dried_tofu',
-        amount: '',
-        marinadeType: '五香卤水',
+    if (activeTab === 'grinding') {
+      setGrindingForm({
+        beanWeight: '',
+        waterAmount: '',
         startTime: getNowTime(),
-        duration: '60',
-        temperature: '80',
-        operator: '李师傅',
+        grindCount: '2',
+        filterType: '纱布过滤',
+        soyMilkAmount: '',
+        okaraAmount: '',
+        operator: '王师傅',
         note: ''
       });
     } else {
-      setFryingForm({
-        productType: 'tofu_puff',
-        amount: '',
-        oilType: '菜籽油',
-        oilTemperature: '180',
+      setBoilingForm({
+        soyMilkAmount: '',
         startTime: getNowTime(),
-        duration: '10',
+        boilingDuration: '20',
+        temperature: '100',
+        antiFoamUsed: false,
+        antiFoamAmount: '',
         operator: '王师傅',
         note: ''
       });
@@ -100,21 +84,22 @@ const FryingPage: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleSubmitMarinating = () => {
-    if (!marinatingForm.amount) {
-      Taro.showToast({ title: '请填写数量', icon: 'none' });
+  const handleSubmitGrinding = () => {
+    if (!grindingForm.beanWeight || !grindingForm.waterAmount) {
+      Taro.showToast({ title: '请填写用豆量和加水量', icon: 'none' });
       return;
     }
 
-    marinatingService.add({
-      productType: marinatingForm.productType,
-      amount: Number(marinadingForm.amount),
-      marinadeType: marinatingForm.marinadeType,
-      startTime: marinatingForm.startTime || getNowTime(),
-      duration: Number(marinadingForm.duration),
-      temperature: Number(marinadingForm.temperature),
-      operator: marinatingForm.operator,
-      note: marinatingForm.note
+    grindingService.add({
+      beanWeight: Number(grindingForm.beanWeight),
+      waterAmount: Number(grindingForm.waterAmount),
+      startTime: grindingForm.startTime || getNowTime(),
+      grindCount: Number(grindingForm.grindCount),
+      filterType: grindingForm.filterType,
+      soyMilkAmount: grindingForm.soyMilkAmount ? Number(grindingForm.soyMilkAmount) : undefined,
+      okaraAmount: grindingForm.okaraAmount ? Number(grindingForm.okaraAmount) : undefined,
+      operator: grindingForm.operator,
+      note: grindingForm.note
     });
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
@@ -122,21 +107,21 @@ const FryingPage: React.FC = () => {
     loadData();
   };
 
-  const handleSubmitFrying = () => {
-    if (!fryingForm.amount) {
-      Taro.showToast({ title: '请填写数量', icon: 'none' });
+  const handleSubmitBoiling = () => {
+    if (!boilingForm.soyMilkAmount) {
+      Taro.showToast({ title: '请填写豆浆量', icon: 'none' });
       return;
     }
 
-    fryingService.add({
-      productType: fryingForm.productType,
-      amount: Number(fryingForm.amount),
-      oilType: fryingForm.oilType,
-      oilTemperature: Number(fryingForm.oilTemperature),
-      startTime: fryingForm.startTime || getNowTime(),
-      duration: Number(fryingForm.duration),
-      operator: fryingForm.operator,
-      note: fryingForm.note
+    boilingService.add({
+      soyMilkAmount: Number(boilingForm.soyMilkAmount),
+      startTime: boilingForm.startTime || getNowTime(),
+      boilingDuration: Number(boilingForm.boilingDuration),
+      temperature: Number(boilingForm.temperature),
+      antiFoamUsed: boilingForm.antiFoamUsed,
+      antiFoamAmount: boilingForm.antiFoamAmount ? Number(boilingForm.antiFoamAmount) : undefined,
+      operator: boilingForm.operator,
+      note: boilingForm.note
     });
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
@@ -145,28 +130,28 @@ const FryingPage: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    if (activeTab === 'marinating') {
-      handleSubmitMarinating();
+    if (activeTab === 'grinding') {
+      handleSubmitGrinding();
     } else {
-      handleSubmitFrying();
+      handleSubmitBoiling();
     }
   };
 
   const handleStart = (type: string, id: string) => {
-    if (type === 'marinating') {
-      marinatingService.update(id, { status: 'in_progress' });
+    if (type === 'grinding') {
+      grindingService.update(id, { status: 'in_progress' });
     } else {
-      fryingService.update(id, { status: 'in_progress' });
+      boilingService.update(id, { status: 'in_progress' });
     }
     loadData();
     Taro.showToast({ title: '已开始', icon: 'success' });
   };
 
   const handleComplete = (type: string, id: string) => {
-    if (type === 'marinating') {
-      marinatingService.update(id, { status: 'completed' });
+    if (type === 'grinding') {
+      grindingService.update(id, { status: 'completed' });
     } else {
-      fryingService.update(id, { status: 'completed' });
+      boilingService.update(id, { status: 'completed' });
     }
     loadData();
     Taro.showToast({ title: '已完成', icon: 'success' });
@@ -178,10 +163,10 @@ const FryingPage: React.FC = () => {
       content: '确定要删除这条记录吗？',
       success: (res) => {
         if (res.confirm) {
-          if (type === 'marinating') {
-            marinatingService.remove(id);
+          if (type === 'grinding') {
+            grindingService.remove(id);
           } else {
-            fryingService.remove(id);
+            boilingService.remove(id);
           }
           loadData();
           Taro.showToast({ title: '已删除', icon: 'success' });
@@ -190,14 +175,8 @@ const FryingPage: React.FC = () => {
     });
   };
 
-  const marinatingStats = marinatingService.getTodayStats();
-  const fryingStats = fryingService.getTodayStats();
-
-  const productLabelMap: Record<string, string> = {
-    dried_tofu: '豆干',
-    tofu_puff: '油豆腐',
-    fried_dried_tofu: '炸豆干'
-  };
+  const grindingStats = grindingService.getTodayStats();
+  const boilingStats = boilingService.getTodayStats();
 
   return (
     <ScrollView
@@ -206,50 +185,50 @@ const FryingPage: React.FC = () => {
       onPullDownRefresh={handleRefresh}
     >
       <View className={styles.headerSection}>
-        <Text className={styles.headerTitle}>🍲 卤制油炸</Text>
-        <Text className={styles.headerDesc}>卤水豆干、油豆腐制作</Text>
+        <Text className={styles.headerTitle}>⚙️ 磨浆煮浆</Text>
+        <Text className={styles.headerDesc}>石磨磨浆、滤渣、煮浆消泡</Text>
         <View className={styles.tabBar}>
           <Text
-            className={`${styles.tabItem} ${activeTab === 'marinating' ? styles.active : ''}`}
-            onClick={() => setActiveTab('marinating')}
+            className={`${styles.tabItem} ${activeTab === 'grinding' ? styles.active : ''}`}
+            onClick={() => setActiveTab('grinding')}
           >
-            🥘 卤制
+            磨浆记录
           </Text>
           <Text
-            className={`${styles.tabItem} ${activeTab === 'frying' ? styles.active : ''}`}
-            onClick={() => setActiveTab('frying')}
+            className={`${styles.tabItem} ${activeTab === 'boiling' ? styles.active : ''}`}
+            onClick={() => setActiveTab('boiling')}
           >
-            🍤 油炸
+            煮浆记录
           </Text>
         </View>
         <View className={styles.statsRow}>
-          {activeTab === 'marinating' ? (
+          {activeTab === 'grinding' ? (
             <>
               <View className={styles.statItem}>
-                <Text className={styles.statValue}>{marinatingStats.totalAmount}斤</Text>
-                <Text className={styles.statLabel}>总产量</Text>
+                <Text className={styles.statValue}>{grindingStats.totalBean}kg</Text>
+                <Text className={styles.statLabel}>磨豆量</Text>
               </View>
               <View className={styles.statItem}>
-                <Text className={styles.statValue}>{marinatingStats.inProgress}</Text>
-                <Text className={styles.statLabel}>卤制中</Text>
+                <Text className={styles.statValue}>{grindingStats.totalMilk}斤</Text>
+                <Text className={styles.statLabel}>豆浆量</Text>
               </View>
               <View className={styles.statItem}>
-                <Text className={styles.statValue}>{marinatingStats.completed}</Text>
+                <Text className={styles.statValue}>{grindingStats.completed}</Text>
                 <Text className={styles.statLabel}>已完成</Text>
               </View>
             </>
           ) : (
             <>
               <View className={styles.statItem}>
-                <Text className={styles.statValue}>{fryingStats.totalAmount}斤</Text>
-                <Text className={styles.statLabel}>总产量</Text>
+                <Text className={styles.statValue}>{boilingStats.totalMilk}斤</Text>
+                <Text className={styles.statLabel}>煮浆量</Text>
               </View>
               <View className={styles.statItem}>
-                <Text className={styles.statValue}>{fryingStats.inProgress}</Text>
-                <Text className={styles.statLabel}>油炸中</Text>
+                <Text className={styles.statValue}>{boilingStats.total}</Text>
+                <Text className={styles.statLabel}>批次</Text>
               </View>
               <View className={styles.statItem}>
-                <Text className={styles.statValue}>{fryingStats.completed}</Text>
+                <Text className={styles.statValue}>{boilingStats.completed}</Text>
                 <Text className={styles.statLabel}>已完成</Text>
               </View>
             </>
@@ -260,21 +239,21 @@ const FryingPage: React.FC = () => {
       <View className={styles.content}>
         <View className={styles.sectionHeader}>
           <Text className={styles.sectionTitle}>
-            {activeTab === 'marinating' ? '卤制记录' : '油炸记录'}
+            {activeTab === 'grinding' ? '磨浆记录' : '煮浆记录'}
           </Text>
           <Text className={styles.addBtn} onClick={handleAdd}>+ 新增</Text>
         </View>
 
-        {activeTab === 'marinating' ? (
-          marinatingRecords.length === 0 ? (
+        {activeTab === 'grinding' ? (
+          grindingRecords.length === 0 ? (
             <View className={styles.emptyState}>暂无记录，点击右上角新增</View>
           ) : (
             <View className={styles.recordList}>
-              {marinatingRecords.map(record => (
+              {grindingRecords.map(record => (
                 <View key={record.id} className={styles.recordCard}>
                   <View className={styles.recordHeader}>
                     <Text className={styles.recordTitle}>
-                      {record.marinadeType} - {record.amount}斤
+                      磨浆 - {record.beanWeight}kg黄豆
                     </Text>
                     <Text className={`${styles.statusTag} ${styles[record.status]}`}>
                       {statusTextMap[record.status]}
@@ -283,17 +262,29 @@ const FryingPage: React.FC = () => {
 
                   <View className={styles.recordInfo}>
                     <View className={styles.recordInfoItem}>
-                      <Text className={styles.recordInfoLabel}>产品:</Text>
-                      <Text className={styles.recordInfoValue}>{productLabelMap[record.productType]}</Text>
+                      <Text className={styles.recordInfoLabel}>加水量:</Text>
+                      <Text className={styles.recordInfoValue}>{record.waterAmount}斤</Text>
                     </View>
                     <View className={styles.recordInfoItem}>
-                      <Text className={styles.recordInfoLabel}>卤制时间:</Text>
-                      <Text className={styles.recordInfoValue}>{record.duration}分钟</Text>
+                      <Text className={styles.recordInfoLabel}>磨浆次数:</Text>
+                      <Text className={styles.recordInfoValue}>{record.grindCount}遍</Text>
                     </View>
                     <View className={styles.recordInfoItem}>
-                      <Text className={styles.recordInfoLabel}>卤温:</Text>
-                      <Text className={styles.recordInfoValue}>{record.temperature}℃</Text>
+                      <Text className={styles.recordInfoLabel}>过滤方式:</Text>
+                      <Text className={styles.recordInfoValue}>{record.filterType}</Text>
                     </View>
+                    {record.soyMilkAmount && (
+                      <View className={styles.recordInfoItem}>
+                        <Text className={styles.recordInfoLabel}>豆浆量:</Text>
+                        <Text className={styles.recordInfoValue}>{record.soyMilkAmount}斤</Text>
+                      </View>
+                    )}
+                    {record.okaraAmount && (
+                      <View className={styles.recordInfoItem}>
+                        <Text className={styles.recordInfoLabel}>豆渣量:</Text>
+                        <Text className={styles.recordInfoValue}>{record.okaraAmount}斤</Text>
+                      </View>
+                    )}
                     <View className={styles.recordInfoItem}>
                       <Text className={styles.recordInfoLabel}>开始时间:</Text>
                       <Text className={styles.recordInfoValue}>{record.startTime}</Text>
@@ -310,7 +301,7 @@ const FryingPage: React.FC = () => {
                       {record.status === 'pending' && (
                         <Text
                           className={`${styles.actionBtn} ${styles.primary}`}
-                          onClick={() => handleStart('marinating', record.id)}
+                          onClick={() => handleStart('grinding', record.id)}
                         >
                           开始
                         </Text>
@@ -318,14 +309,14 @@ const FryingPage: React.FC = () => {
                       {record.status === 'in_progress' && (
                         <Text
                           className={`${styles.actionBtn} ${styles.success}`}
-                          onClick={() => handleComplete('marinating', record.id)}
+                          onClick={() => handleComplete('grinding', record.id)}
                         >
                           完成
                         </Text>
                       )}
                       <Text
                         className={`${styles.actionBtn} ${styles.danger}`}
-                        onClick={() => handleDelete('marinating', record.id)}
+                        onClick={() => handleDelete('grinding', record.id)}
                       >
                         删除
                       </Text>
@@ -336,15 +327,15 @@ const FryingPage: React.FC = () => {
             </View>
           )
         ) : (
-          fryingRecords.length === 0 ? (
+          boilingRecords.length === 0 ? (
             <View className={styles.emptyState}>暂无记录，点击右上角新增</View>
           ) : (
             <View className={styles.recordList}>
-              {fryingRecords.map(record => (
+              {boilingRecords.map(record => (
                 <View key={record.id} className={styles.recordCard}>
                   <View className={styles.recordHeader}>
                     <Text className={styles.recordTitle}>
-                      {productLabelMap[record.productType]} - {record.amount}斤
+                      煮浆 - {record.soyMilkAmount}斤
                     </Text>
                     <Text className={`${styles.statusTag} ${styles[record.status]}`}>
                       {statusTextMap[record.status]}
@@ -353,16 +344,18 @@ const FryingPage: React.FC = () => {
 
                   <View className={styles.recordInfo}>
                     <View className={styles.recordInfoItem}>
-                      <Text className={styles.recordInfoLabel}>食用油:</Text>
-                      <Text className={styles.recordInfoValue}>{record.oilType}</Text>
+                      <Text className={styles.recordInfoLabel}>煮沸时间:</Text>
+                      <Text className={styles.recordInfoValue}>{record.boilingDuration}分钟</Text>
                     </View>
                     <View className={styles.recordInfoItem}>
-                      <Text className={styles.recordInfoLabel}>油温:</Text>
-                      <Text className={styles.recordInfoValue}>{record.oilTemperature}℃</Text>
+                      <Text className={styles.recordInfoLabel}>温度:</Text>
+                      <Text className={styles.recordInfoValue}>{record.temperature}℃</Text>
                     </View>
                     <View className={styles.recordInfoItem}>
-                      <Text className={styles.recordInfoLabel}>油炸时间:</Text>
-                      <Text className={styles.recordInfoValue}>{record.duration}分钟</Text>
+                      <Text className={styles.recordInfoLabel}>消泡剂:</Text>
+                      <Text className={styles.recordInfoValue}>
+                        {record.antiFoamUsed ? `${record.antiFoamAmount || 0}g` : '未使用'}
+                      </Text>
                     </View>
                     <View className={styles.recordInfoItem}>
                       <Text className={styles.recordInfoLabel}>开始时间:</Text>
@@ -380,7 +373,7 @@ const FryingPage: React.FC = () => {
                       {record.status === 'pending' && (
                         <Text
                           className={`${styles.actionBtn} ${styles.primary}`}
-                          onClick={() => handleStart('frying', record.id)}
+                          onClick={() => handleStart('boiling', record.id)}
                         >
                           开始
                         </Text>
@@ -388,14 +381,14 @@ const FryingPage: React.FC = () => {
                       {record.status === 'in_progress' && (
                         <Text
                           className={`${styles.actionBtn} ${styles.success}`}
-                          onClick={() => handleComplete('frying', record.id)}
+                          onClick={() => handleComplete('boiling', record.id)}
                         >
                           完成
                         </Text>
                       )}
                       <Text
                         className={`${styles.actionBtn} ${styles.danger}`}
-                        onClick={() => handleDelete('frying', record.id)}
+                        onClick={() => handleDelete('boiling', record.id)}
                       >
                         删除
                       </Text>
@@ -413,65 +406,35 @@ const FryingPage: React.FC = () => {
           <View className={styles.formSheet} onClick={e => e.stopPropagation()}>
             <View className={styles.formHeader}>
               <Text className={styles.formTitle}>
-                新增{activeTab === 'marinating' ? '卤制' : '油炸'}记录
+                新增{activeTab === 'grinding' ? '磨浆' : '煮浆'}记录
               </Text>
               <Text className={styles.formClose} onClick={() => setShowForm(false)}>✕</Text>
             </View>
 
             <ScrollView scrollY className={styles.formBody}>
-              {activeTab === 'marinating' ? (
+              {activeTab === 'grinding' ? (
                 <>
-                  <View className={styles.formGroup}>
-                    <Text className={styles.formLabel}>产品类型</Text>
-                    <View className={styles.formRadioGroup}>
-                      {productOptions.map(opt => (
-                        <Text
-                          key={opt.key}
-                          className={`${styles.formRadioItem} ${marinatingForm.productType === opt.key ? styles.active : ''}`}
-                          onClick={() => setMarinatingForm({ ...marinatingForm, productType: opt.key as any })}
-                        >
-                          {opt.label}
-                        </Text>
-                      ))}
-                    </View>
-                  </View>
-
-                  <View className={styles.formGroup}>
-                    <Text className={styles.formLabel}>卤水配方</Text>
-                    <View className={styles.formRadioGroup}>
-                      {marinadeOptions.map(opt => (
-                        <Text
-                          key={opt}
-                          className={`${styles.formRadioItem} ${marinatingForm.marinadeType === opt ? styles.active : ''}`}
-                          onClick={() => setMarinatingForm({ ...marinatingForm, marinadeType: opt })}
-                        >
-                          {opt}
-                        </Text>
-                      ))}
-                    </View>
-                  </View>
-
                   <View className={styles.formRow}>
                     <View className={styles.formRowItem}>
                       <View className={styles.formGroup}>
-                        <Text className={styles.formLabel}>数量 (斤)</Text>
+                        <Text className={styles.formLabel}>用豆量 (kg)</Text>
                         <Input
                           type="digit"
                           className={styles.formInput}
-                          value={marinatingForm.amount}
-                          onInput={e => setMarinatingForm({ ...marinatingForm, amount: e.detail.value })}
+                          value={grindingForm.beanWeight}
+                          onInput={e => setGrindingForm({ ...grindingForm, beanWeight: e.detail.value })}
                           placeholder="请输入"
                         />
                       </View>
                     </View>
                     <View className={styles.formRowItem}>
                       <View className={styles.formGroup}>
-                        <Text className={styles.formLabel}>卤制时间 (分钟)</Text>
+                        <Text className={styles.formLabel}>加水量 (斤)</Text>
                         <Input
                           type="digit"
                           className={styles.formInput}
-                          value={marinatingForm.duration}
-                          onInput={e => setMarinatingForm({ ...marinatingForm, duration: e.detail.value })}
+                          value={grindingForm.waterAmount}
+                          onInput={e => setGrindingForm({ ...grindingForm, waterAmount: e.detail.value })}
                           placeholder="请输入"
                         />
                       </View>
@@ -481,91 +444,23 @@ const FryingPage: React.FC = () => {
                   <View className={styles.formRow}>
                     <View className={styles.formRowItem}>
                       <View className={styles.formGroup}>
-                        <Text className={styles.formLabel}>卤温 (℃)</Text>
+                        <Text className={styles.formLabel}>磨浆次数</Text>
                         <Input
-                          type="digit"
+                          type="number"
                           className={styles.formInput}
-                          value={marinatingForm.temperature}
-                          onInput={e => setMarinatingForm({ ...marinatingForm, temperature: e.detail.value })}
+                          value={grindingForm.grindCount}
+                          onInput={e => setGrindingForm({ ...grindingForm, grindCount: e.detail.value })}
                           placeholder="请输入"
                         />
                       </View>
                     </View>
                     <View className={styles.formRowItem}>
                       <View className={styles.formGroup}>
-                        <Text className={styles.formLabel}>操作人</Text>
+                        <Text className={styles.formLabel}>过滤方式</Text>
                         <Input
                           className={styles.formInput}
-                          value={marinatingForm.operator}
-                          onInput={e => setMarinatingForm({ ...marinatingForm, operator: e.detail.value })}
-                          placeholder="请输入"
-                        />
-                      </View>
-                    </View>
-                  </View>
-
-                  <View className={styles.formGroup}>
-                    <Text className={styles.formLabel}>开始时间</Text>
-                    <Input
-                      className={styles.formInput}
-                      value={marinatingForm.startTime}
-                      onInput={e => setMarinatingForm({ ...marinatingForm, startTime: e.detail.value })}
-                      placeholder="YYYY-MM-DD HH:mm"
-                    />
-                  </View>
-
-                  <View className={styles.formGroup}>
-                    <Text className={styles.formLabel}>备注</Text>
-                    <Textarea
-                      className={styles.formTextarea}
-                      value={marinatingForm.note}
-                      onInput={e => setMarinatingForm({ ...marinatingForm, note: e.detail.value })}
-                      placeholder="请输入备注信息"
-                      maxlength={200}
-                    />
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View className={styles.formGroup}>
-                    <Text className={styles.formLabel}>产品类型</Text>
-                    <View className={styles.formRadioGroup}>
-                      <Text
-                        className={`${styles.formRadioItem} ${fryingForm.productType === 'tofu_puff' ? styles.active : ''}`}
-                        onClick={() => setFryingForm({ ...fryingForm, productType: 'tofu_puff' })}
-                      >
-                        油豆腐
-                      </Text>
-                      <Text
-                        className={`${styles.formRadioItem} ${fryingForm.productType === 'fried_dried_tofu' ? styles.active : ''}`}
-                        onClick={() => setFryingForm({ ...fryingForm, productType: 'fried_dried_tofu' })}
-                      >
-                        炸豆干
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className={styles.formRow}>
-                    <View className={styles.formRowItem}>
-                      <View className={styles.formGroup}>
-                        <Text className={styles.formLabel}>数量 (斤)</Text>
-                        <Input
-                          type="digit"
-                          className={styles.formInput}
-                          value={fryingForm.amount}
-                          onInput={e => setFryingForm({ ...fryingForm, amount: e.detail.value })}
-                          placeholder="请输入"
-                        />
-                      </View>
-                    </View>
-                    <View className={styles.formRowItem}>
-                      <View className={styles.formGroup}>
-                        <Text className={styles.formLabel}>油炸时间 (分钟)</Text>
-                        <Input
-                          type="digit"
-                          className={styles.formInput}
-                          value={fryingForm.duration}
-                          onInput={e => setFryingForm({ ...fryingForm, duration: e.detail.value })}
+                          value={grindingForm.filterType}
+                          onInput={e => setGrindingForm({ ...grindingForm, filterType: e.detail.value })}
                           placeholder="请输入"
                         />
                       </View>
@@ -575,24 +470,25 @@ const FryingPage: React.FC = () => {
                   <View className={styles.formRow}>
                     <View className={styles.formRowItem}>
                       <View className={styles.formGroup}>
-                        <Text className={styles.formLabel}>食用油</Text>
+                        <Text className={styles.formLabel}>豆浆量 (斤)</Text>
                         <Input
+                          type="digit"
                           className={styles.formInput}
-                          value={fryingForm.oilType}
-                          onInput={e => setFryingForm({ ...fryingForm, oilType: e.detail.value })}
-                          placeholder="请输入"
+                          value={grindingForm.soyMilkAmount}
+                          onInput={e => setGrindingForm({ ...grindingForm, soyMilkAmount: e.detail.value })}
+                          placeholder="可选"
                         />
                       </View>
                     </View>
                     <View className={styles.formRowItem}>
                       <View className={styles.formGroup}>
-                        <Text className={styles.formLabel}>油温 (℃)</Text>
+                        <Text className={styles.formLabel}>豆渣量 (斤)</Text>
                         <Input
                           type="digit"
                           className={styles.formInput}
-                          value={fryingForm.oilTemperature}
-                          onInput={e => setFryingForm({ ...fryingForm, oilTemperature: e.detail.value })}
-                          placeholder="请输入"
+                          value={grindingForm.okaraAmount}
+                          onInput={e => setGrindingForm({ ...grindingForm, okaraAmount: e.detail.value })}
+                          placeholder="可选"
                         />
                       </View>
                     </View>
@@ -602,8 +498,8 @@ const FryingPage: React.FC = () => {
                     <Text className={styles.formLabel}>操作人</Text>
                     <Input
                       className={styles.formInput}
-                      value={fryingForm.operator}
-                      onInput={e => setFryingForm({ ...fryingForm, operator: e.detail.value })}
+                      value={grindingForm.operator}
+                      onInput={e => setGrindingForm({ ...grindingForm, operator: e.detail.value })}
                       placeholder="请输入"
                     />
                   </View>
@@ -612,8 +508,8 @@ const FryingPage: React.FC = () => {
                     <Text className={styles.formLabel}>开始时间</Text>
                     <Input
                       className={styles.formInput}
-                      value={fryingForm.startTime}
-                      onInput={e => setFryingForm({ ...fryingForm, startTime: e.detail.value })}
+                      value={grindingForm.startTime}
+                      onInput={e => setGrindingForm({ ...grindingForm, startTime: e.detail.value })}
                       placeholder="YYYY-MM-DD HH:mm"
                     />
                   </View>
@@ -622,8 +518,107 @@ const FryingPage: React.FC = () => {
                     <Text className={styles.formLabel}>备注</Text>
                     <Textarea
                       className={styles.formTextarea}
-                      value={fryingForm.note}
-                      onInput={e => setFryingForm({ ...fryingForm, note: e.detail.value })}
+                      value={grindingForm.note}
+                      onInput={e => setGrindingForm({ ...grindingForm, note: e.detail.value })}
+                      placeholder="请输入备注信息"
+                      maxlength={200}
+                    />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View className={styles.formRow}>
+                    <View className={styles.formRowItem}>
+                      <View className={styles.formGroup}>
+                        <Text className={styles.formLabel}>豆浆量 (斤)</Text>
+                        <Input
+                          type="digit"
+                          className={styles.formInput}
+                          value={boilingForm.soyMilkAmount}
+                          onInput={e => setBoilingForm({ ...boilingForm, soyMilkAmount: e.detail.value })}
+                          placeholder="请输入"
+                        />
+                      </View>
+                    </View>
+                    <View className={styles.formRowItem}>
+                      <View className={styles.formGroup}>
+                        <Text className={styles.formLabel}>煮沸时间 (分钟)</Text>
+                        <Input
+                          type="digit"
+                          className={styles.formInput}
+                          value={boilingForm.boilingDuration}
+                          onInput={e => setBoilingForm({ ...boilingForm, boilingDuration: e.detail.value })}
+                          placeholder="请输入"
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  <View className={styles.formRow}>
+                    <View className={styles.formRowItem}>
+                      <View className={styles.formGroup}>
+                        <Text className={styles.formLabel}>温度 (℃)</Text>
+                        <Input
+                          type="digit"
+                          className={styles.formInput}
+                          value={boilingForm.temperature}
+                          onInput={e => setBoilingForm({ ...boilingForm, temperature: e.detail.value })}
+                          placeholder="请输入"
+                        />
+                      </View>
+                    </View>
+                    <View className={styles.formRowItem}>
+                      <View className={styles.formGroup}>
+                        <Text className={styles.formLabel}>操作人</Text>
+                        <Input
+                          className={styles.formInput}
+                          value={boilingForm.operator}
+                          onInput={e => setBoilingForm({ ...boilingForm, operator: e.detail.value })}
+                          placeholder="请输入"
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  <View className={styles.formGroup}>
+                    <View className={styles.formSwitch}>
+                      <Text className={styles.switchLabel}>是否使用消泡剂</Text>
+                      <View
+                        className={`${styles.switchToggle} ${boilingForm.antiFoamUsed ? styles.active : ''}`}
+                        onClick={() => setBoilingForm({ ...boilingForm, antiFoamUsed: !boilingForm.antiFoamUsed })}
+                      />
+                    </View>
+                  </View>
+
+                  {boilingForm.antiFoamUsed && (
+                    <View className={styles.formGroup}>
+                      <Text className={styles.formLabel}>消泡剂用量 (g)</Text>
+                      <Input
+                        type="digit"
+                        className={styles.formInput}
+                        value={boilingForm.antiFoamAmount}
+                        onInput={e => setBoilingForm({ ...boilingForm, antiFoamAmount: e.detail.value })}
+                        placeholder="请输入"
+                      />
+                    </View>
+                  )}
+
+                  <View className={styles.formGroup}>
+                    <Text className={styles.formLabel}>开始时间</Text>
+                    <Input
+                      className={styles.formInput}
+                      value={boilingForm.startTime}
+                      onInput={e => setBoilingForm({ ...boilingForm, startTime: e.detail.value })}
+                      placeholder="YYYY-MM-DD HH:mm"
+                    />
+                  </View>
+
+                  <View className={styles.formGroup}>
+                    <Text className={styles.formLabel}>备注</Text>
+                    <Textarea
+                      className={styles.formTextarea}
+                      value={boilingForm.note}
+                      onInput={e => setBoilingForm({ ...boilingForm, note: e.detail.value })}
                       placeholder="请输入备注信息"
                       maxlength={200}
                     />
@@ -647,4 +642,4 @@ const FryingPage: React.FC = () => {
   );
 };
 
-export default FryingPage;
+export default GrindingPage;

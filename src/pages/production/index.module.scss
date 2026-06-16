@@ -6,116 +6,128 @@
   padding-bottom: 40rpx;
 }
 
-.tabBar {
-  display: flex;
-  background: $color-bg-card;
-  padding: $spacing-sm $page-padding;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: $shadow-card;
-  gap: $spacing-sm;
-  overflow-x: auto;
-
-  @include scroll-x-container;
-}
-
-.tabItem {
-  @include scroll-x-item(auto);
-  padding: $spacing-sm $spacing-lg;
-  border-radius: $radius-round;
-  font-size: $font-size-md;
-  color: $color-text-secondary;
-  background: $color-bg-page;
-  white-space: nowrap;
-  transition: all $transition-base;
-
-  &.active {
-    background: $color-primary;
-    color: $color-text-white;
-    font-weight: $font-weight-semibold;
-  }
-
-  &:active {
-    opacity: 0.8;
-  }
-}
-
-.content {
-  padding: $spacing-md $page-padding;
-}
-
-.sectionHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: $spacing-md;
-}
-
-.sectionTitle {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-}
-
-.addBtn {
-  padding: $spacing-sm $spacing-lg;
-  background: $color-primary;
+.header {
+  padding: $spacing-xl $page-padding;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
   color: $color-text-white;
-  border-radius: $radius-button;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-
-  &:active {
-    opacity: 0.8;
-  }
 }
 
-.recordList {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-}
-
-.summaryCard {
-  background: $color-bg-card;
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  margin-bottom: $spacing-lg;
-  box-shadow: $shadow-card;
-}
-
-.summaryTitle {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: $spacing-md;
-}
-
-.summaryStats {
-  display: flex;
-  justify-content: space-around;
-}
-
-.summaryStat {
-  text-align: center;
-}
-
-.summaryValue {
-  font-size: $font-size-xl;
+.headerTitle {
+  font-size: $font-size-xxl;
   font-weight: $font-bold;
-  color: $color-primary;
   margin-bottom: $spacing-xs;
 }
 
-.summaryLabel {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
+.headerDesc {
+  font-size: $font-size-md;
+  opacity: 0.9;
 }
 
-.emptyState {
-  padding: $spacing-xl 0;
-  text-align: center;
-  color: $color-text-tertiary;
+.processGrid {
+  padding: $spacing-md $page-padding;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-top: -$spacing-lg;
+}
+
+.processCard {
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  color: $color-text-white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: $shadow-card;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+    transition: all $transition-base;
+  }
+}
+
+.cardIcon {
+  font-size: 60rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.cardTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  margin-bottom: $spacing-xs;
+}
+
+.cardDesc {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+  margin-bottom: $spacing-md;
+}
+
+.cardStats {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  backdrop-filter: blur(10px);
+}
+
+.cardMainStat {
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.cardSubStat {
+  font-size: $font-size-xs;
+  opacity: 0.9;
+}
+
+.cardArrow {
+  position: absolute;
+  top: $spacing-lg;
+  right: $spacing-lg;
+  font-size: $font-size-sm;
+  opacity: 0.9;
+}
+
+.tipSection {
+  margin: $spacing-md $page-padding;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.tipTitle {
   font-size: $font-size-md;
+  font-weight: $font-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-lg;
+}
+
+.flowSteps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flowStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.flowIcon {
+  font-size: 40rpx;
+}
+
+.flowText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.flowArrow {
+  color: $color-text-tertiary;
+  font-size: $font-size-lg;
 }

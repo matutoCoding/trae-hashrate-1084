@@ -8,7 +8,7 @@
 
 .headerSection {
   padding: $spacing-lg $page-padding;
-  background: linear-gradient(135deg, #FF8A65 0%, #FF7043 100%);
+  background: linear-gradient(135deg, #64B5F6 0%, #42A5F5 100%);
   color: $color-text-white;
 }
 
@@ -21,33 +21,6 @@
 .headerDesc {
   font-size: $font-size-sm;
   opacity: 0.9;
-}
-
-.tabBar {
-  display: flex;
-  gap: $spacing-sm;
-  margin-top: $spacing-lg;
-}
-
-.tabItem {
-  flex: 1;
-  padding: $spacing-sm 0;
-  text-align: center;
-  border-radius: $radius-button;
-  font-size: $font-size-md;
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.15);
-  transition: all $transition-base;
-
-  &.active {
-    background: $color-text-white;
-    color: #FF7043;
-    font-weight: $font-weight-semibold;
-  }
-
-  &:active {
-    opacity: 0.8;
-  }
 }
 
 .statsRow {
@@ -94,7 +67,7 @@
 
 .addBtn {
   padding: $spacing-sm $spacing-lg;
-  background: #FF7043;
+  background: #64B5F6;
   color: $color-text-white;
   border-radius: $radius-button;
   font-size: $font-size-sm;
@@ -149,7 +122,7 @@
     color: #86909C;
   }
 
-  &.in_progress {
+  &.inProgress {
     background: rgba(245, 166, 35, 0.15);
     color: $color-primary;
   }
@@ -218,8 +191,8 @@
   color: $color-text-secondary;
 
   &.primary {
-    background: rgba(255, 112, 67, 0.1);
-    color: #FF7043;
+    background: rgba(100, 181, 246, 0.1);
+    color: #64B5F6;
   }
 
   &.success {
@@ -327,32 +300,6 @@
   flex: 1;
 }
 
-.formRadioGroup {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-sm;
-}
-
-.formRadioItem {
-  padding: $spacing-sm $spacing-md;
-  background: $color-bg-page;
-  border: 1rpx solid $color-border;
-  border-radius: $radius-button;
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-
-  &.active {
-    background: rgba(255, 112, 67, 0.1);
-    border-color: #FF7043;
-    color: #FF7043;
-    font-weight: $font-weight-medium;
-  }
-
-  &:active {
-    opacity: 0.8;
-  }
-}
-
 .formFooter {
   padding: $spacing-lg;
   padding-bottom: calc($spacing-lg + env(safe-area-inset-bottom));
@@ -378,7 +325,7 @@
   }
 
   &.btnSubmit {
-    background: #FF7043;
+    background: #64B5F6;
     color: $color-text-white;
   }
 

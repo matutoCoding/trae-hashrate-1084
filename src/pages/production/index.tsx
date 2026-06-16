@@ -1,271 +1,97 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import RecordItem from '@/components/RecordItem';
 import {
-  soakingRecords,
-  grindingRecords,
-  boilingRecords,
-  coagulatingRecords,
-  pressingRecords
-} from '@/data/mockData';
+  soakingService,
+  grindingService,
+  coagulatingService,
+  pressingService
+} from '@/services/dataService';
 
-const tabs = [
-  { key: 'soaking', label: '黄豆浸泡', icon: '🫘' },
-  { key: 'grinding', label: '磨浆煮浆', icon: '⚙️' },
-  { key: 'coagulating', label: '点浆凝固', icon: '🧊' },
-  { key: 'pressing', label: '压制成型', icon: '📦' }
+const processList = [
+  {
+    key: 'soaking',
+    icon: '🫘',
+    title: '黄豆浸泡',
+    desc: '记录黄豆泡发时长、水温',
+    bg: 'linear-gradient(135deg, #64B5F6 0%, #42A5F5 100%)',
+    page: '/pages/soaking/index'
+  },
+  {
+    key: 'grinding',
+    icon: '⚙️',
+    title: '磨浆煮浆',
+    desc: '石磨磨浆、滤渣、煮浆消泡',
+    bg: 'linear-gradient(135deg, #BA68C8 0%, #AB47BC 100%)',
+    page: '/pages/grinding/index'
+  },
+  {
+    key: 'coagulating',
+    icon: '🧊',
+    title: '点浆凝固',
+    desc: '石膏/卤水点浆、蹲脑凝固',
+    bg: 'linear-gradient(135deg, #81C784 0%, #66BB6A 100%)',
+    page: '/pages/coagulating/index'
+  },
+  {
+    key: 'pressing',
+    icon: '📦',
+    title: '压制成型',
+    desc: '上箱压制、豆腐豆干豆皮成型',
+    bg: 'linear-gradient(135deg, #FFB74D 0%, #FFA726 100%)',
+    page: '/pages/pressing/index'
+  }
 ];
 
 const ProductionPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('soaking');
+  const [stats, setStats] = useState<any>({});
 
-  const handleTabChange = (key: string) => {
-    setActiveTab(key);
-  };
-
-  const handleAdd = () => {
-    Taro.showToast({
-      title: '功能开发中',
-      icon: 'none'
+  const loadStats = useCallback(() => {
+    setStats({
+      soaking: soakingService.getTodayStats(),
+      grinding: grindingService.getTodayStats(),
+      coagulating: coagulatingService.getTodayStats(),
+      pressing: pressingService.getTodayStats()
     });
-  };
-
-  const handleRefresh = useCallback(() => {
-    Taro.showLoading({ title: '刷新中...' });
-    setTimeout(() => {
-      Taro.hideLoading();
-      Taro.stopPullDownRefresh();
-    }, 1000);
   }, []);
 
-  const renderSoakingContent = () => {
-    const totalBean = soakingRecords.reduce((sum, r) => sum + r.beanWeight, 0);
-    const inProgress = soakingRecords.filter(r => r.status === 'in_progress').length;
-    const completed = soakingRecords.filter(r => r.status === 'completed').length;
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
-    return (
-      <>
-        <View className={styles.summaryCard}>
-          <Text className={styles.summaryTitle}>今日泡豆概览</Text>
-          <View className={styles.summaryStats}>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{totalBean}kg</Text>
-              <Text className={styles.summaryLabel}>总用豆量</Text>
-            </View>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{inProgress}</Text>
-              <Text className={styles.summaryLabel}>进行中</Text>
-            </View>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{completed}</Text>
-              <Text className={styles.summaryLabel}>已完成</Text>
-            </View>
-          </View>
-        </View>
+  useEffect(() => {
+    const timer = setInterval(() => {
+      loadStats();
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [loadStats]);
 
-        <View className={styles.recordList}>
-          {soakingRecords.map(record => (
-            <RecordItem
-              key={record.id}
-              title={`${record.beanType} - ${record.beanWeight}kg`}
-              status={record.status}
-              infoItems={[
-                { label: '开始时间', value: record.startTime.split(' ')[1] },
-                { label: '预计时长', value: `${record.expectedDuration}h` },
-                { label: '水温', value: `${record.waterTemperature || '--'}℃` }
-              ]}
-              note={record.note}
-              operator={record.operator}
-              onClick={handleAdd}
-            />
-          ))}
-        </View>
-      </>
-    );
+  const handleRefresh = useCallback(() => {
+    loadStats();
+    setTimeout(() => {
+      Taro.stopPullDownRefresh();
+    }, 500);
+  }, [loadStats]);
+
+  const handleProcessClick = (page: string) => {
+    Taro.navigateTo({ url: page });
   };
 
-  const renderGrindingContent = () => {
-    const totalGrind = grindingRecords.reduce((sum, r) => sum + r.beanWeight, 0);
-    const totalMilk = grindingRecords.reduce((sum, r) => sum + (r.soyMilkAmount || 0), 0);
-
-    return (
-      <>
-        <View className={styles.summaryCard}>
-          <Text className={styles.summaryTitle}>今日磨浆概览</Text>
-          <View className={styles.summaryStats}>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{totalGrind}kg</Text>
-              <Text className={styles.summaryLabel}>磨豆量</Text>
-            </View>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{totalMilk}斤</Text>
-              <Text className={styles.summaryLabel}>豆浆量</Text>
-            </View>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{boilingRecords.length}</Text>
-              <Text className={styles.summaryLabel}>煮浆批次</Text>
-            </View>
-          </View>
-        </View>
-
-        <View className={styles.sectionHeader}>
-          <Text className={styles.sectionTitle}>磨浆记录</Text>
-          <Text className={styles.addBtn} onClick={handleAdd}>+ 新增</Text>
-        </View>
-
-        <View className={styles.recordList}>
-          {grindingRecords.map(record => (
-            <RecordItem
-              key={record.id}
-              title={`第${record.id.slice(1)}批 - ${record.beanWeight}kg`}
-              status={record.status}
-              infoItems={[
-                { label: '加水量', value: `${record.waterAmount}斤` },
-                { label: '磨浆次数', value: `${record.grindCount}遍` },
-                { label: '过滤方式', value: record.filterType }
-              ]}
-              note={record.note}
-              operator={record.operator}
-            />
-          ))}
-        </View>
-
-        <View className={styles.sectionHeader} style={{ marginTop: 32 }}>
-          <Text className={styles.sectionTitle}>煮浆记录</Text>
-          <Text className={styles.addBtn} onClick={handleAdd}>+ 新增</Text>
-        </View>
-
-        <View className={styles.recordList}>
-          {boilingRecords.map(record => (
-            <RecordItem
-              key={record.id}
-              title={`煮浆 - ${record.soyMilkAmount}斤`}
-              status={record.status}
-              infoItems={[
-                { label: '煮沸时间', value: `${record.boilingDuration}分钟` },
-                { label: '温度', value: `${record.temperature}℃` },
-                { label: '消泡剂', value: record.antiFoamUsed ? `${record.antiFoamAmount}g` : '未使用' }
-              ]}
-              note={record.note}
-              operator={record.operator}
-            />
-          ))}
-        </View>
-      </>
-    );
-  };
-
-  const renderCoagulatingContent = () => {
-    const totalMilk = coagulatingRecords.reduce((sum, r) => sum + r.soyMilkAmount, 0);
-    const brineCount = coagulatingRecords.filter(r => r.coagulantType === 'brine').length;
-    const gypsumCount = coagulatingRecords.filter(r => r.coagulantType === 'gypsum').length;
-
-    return (
-      <>
-        <View className={styles.summaryCard}>
-          <Text className={styles.summaryTitle}>今日点浆概览</Text>
-          <View className={styles.summaryStats}>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{totalMilk}斤</Text>
-              <Text className={styles.summaryLabel}>总豆浆量</Text>
-            </View>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{brineCount}</Text>
-              <Text className={styles.summaryLabel}>盐卤点浆</Text>
-            </View>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{gypsumCount}</Text>
-              <Text className={styles.summaryLabel}>石膏点浆</Text>
-            </View>
-          </View>
-        </View>
-
-        <View className={styles.recordList}>
-          {coagulatingRecords.map(record => (
-            <RecordItem
-              key={record.id}
-              title={`${record.coagulantType === 'brine' ? '盐卤' : '石膏'}点浆 - ${record.soyMilkAmount}斤`}
-              status={record.status}
-              infoItems={[
-                { label: '凝固剂用量', value: `${record.coagulantAmount}g` },
-                { label: '蹲脑时间', value: `${record.restingDuration}分钟` },
-                { label: '豆浆温度', value: `${record.temperature}℃` }
-              ]}
-              note={record.note}
-              operator={record.operator}
-            />
-          ))}
-        </View>
-      </>
-    );
-  };
-
-  const renderPressingContent = () => {
-    const tofuCount = pressingRecords.filter(r => r.productType === 'tofu').length;
-    const driedTofu = pressingRecords.filter(r => r.productType === 'dried_tofu').length;
-    const tofuSkin = pressingRecords.filter(r => r.productType === 'tofu_skin').length;
-
-    const productMap: Record<string, string> = {
-      tofu: '嫩豆腐',
-      tofu_pudding: '豆腐脑',
-      dried_tofu: '豆干',
-      tofu_skin: '千张'
-    };
-
-    return (
-      <>
-        <View className={styles.summaryCard}>
-          <Text className={styles.summaryTitle}>今日成型概览</Text>
-          <View className={styles.summaryStats}>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{tofuCount}</Text>
-              <Text className={styles.summaryLabel}>豆腐</Text>
-            </View>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{driedTofu}</Text>
-              <Text className={styles.summaryLabel}>豆干</Text>
-            </View>
-            <View className={styles.summaryStat}>
-              <Text className={styles.summaryValue}>{tofuSkin}</Text>
-              <Text className={styles.summaryLabel}>千张</Text>
-            </View>
-          </View>
-        </View>
-
-        <View className={styles.recordList}>
-          {pressingRecords.map(record => (
-            <RecordItem
-              key={record.id}
-              title={`${productMap[record.productType]} - ${record.amount}斤`}
-              status={record.status}
-              infoItems={[
-                { label: '压制时间', value: `${record.pressDuration}分钟` },
-                { label: '压制重量', value: `${record.pressWeight}kg` },
-                { label: '开始时间', value: record.startTime.split(' ')[1] }
-              ]}
-              note={record.note}
-              operator={record.operator}
-            />
-          ))}
-        </View>
-      </>
-    );
-  };
-
-  const renderContent = () => {
-    switch (activeTab) {
+  const getStatText = (key: string) => {
+    const s = stats[key];
+    if (!s) return { main: '-', sub: '' };
+    switch (key) {
       case 'soaking':
-        return renderSoakingContent();
+        return { main: `${s.totalWeight}kg`, sub: `${s.inProgress}批进行中` };
       case 'grinding':
-        return renderGrindingContent();
+        return { main: `${s.totalMilk}斤`, sub: `${s.inProgress}批进行中` };
       case 'coagulating':
-        return renderCoagulatingContent();
+        return { main: `${s.totalMilk}斤`, sub: `盐卤${s.brineCount} / 石膏${s.gypsumCount}` };
       case 'pressing':
-        return renderPressingContent();
+        return { main: `${s.tofuAmount}斤`, sub: `豆腐${s.tofuAmount} / 豆干${s.driedTofuAmount}` };
       default:
-        return null;
+        return { main: '-', sub: '' };
     }
   };
 
@@ -275,20 +101,61 @@ const ProductionPage: React.FC = () => {
       className={styles.pageContainer}
       onPullDownRefresh={handleRefresh}
     >
-      <ScrollView scrollX className={styles.tabBar}>
-        {tabs.map(tab => (
-          <Text
-            key={tab.key}
-            className={`${styles.tabItem} ${activeTab === tab.key ? styles.active : ''}`}
-            onClick={() => handleTabChange(tab.key)}
-          >
-            {tab.icon} {tab.label}
-          </Text>
-        ))}
-      </ScrollView>
+      <View className={styles.header}>
+        <Text className={styles.headerTitle}>🏭 生产管理</Text>
+        <Text className={styles.headerDesc}>四大生产环节，全程记录追溯</Text>
+      </View>
 
-      <View className={styles.content}>
-        {renderContent()}
+      <View className={styles.processGrid}>
+        {processList.map(item => {
+          const stat = getStatText(item.key);
+          return (
+            <View
+              key={item.key}
+              className={styles.processCard}
+              style={{ background: item.bg }}
+              onClick={() => handleProcessClick(item.page)}
+            >
+              <View className={styles.cardIcon}>
+                <Text>{item.icon}</Text>
+              </View>
+              <Text className={styles.cardTitle}>{item.title}</Text>
+              <Text className={styles.cardDesc}>{item.desc}</Text>
+              <View className={styles.cardStats}>
+                <Text className={styles.cardMainStat}>{stat.main}</Text>
+                <Text className={styles.cardSubStat}>{stat.sub}</Text>
+              </View>
+              <View className={styles.cardArrow}>
+                <Text>进入 →</Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      <View className={styles.tipSection}>
+        <Text className={styles.tipTitle}>💡 生产流程</Text>
+        <View className={styles.flowSteps}>
+          <View className={styles.flowStep}>
+            <Text className={styles.flowIcon}>🫘</Text>
+            <Text className={styles.flowText}>泡豆</Text>
+          </View>
+          <Text className={styles.flowArrow}>→</Text>
+          <View className={styles.flowStep}>
+            <Text className={styles.flowIcon}>⚙️</Text>
+            <Text className={styles.flowText}>磨浆</Text>
+          </View>
+          <Text className={styles.flowArrow}>→</Text>
+          <View className={styles.flowStep}>
+            <Text className={styles.flowIcon}>🧊</Text>
+            <Text className={styles.flowText}>点浆</Text>
+          </View>
+          <Text className={styles.flowArrow}>→</Text>
+          <View className={styles.flowStep}>
+            <Text className={styles.flowIcon}>📦</Text>
+            <Text className={styles.flowText}>压制</Text>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
