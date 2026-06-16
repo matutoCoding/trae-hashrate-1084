@@ -1,12 +1,26 @@
-// 生产环节类型
 export type ProcessType = 'soaking' | 'grinding' | 'coagulating' | 'pressing' | 'frying' | 'marinating';
 
-// 生产状态
 export type ProcessStatus = 'pending' | 'in_progress' | 'completed';
 
-// 黄豆浸泡记录
+export interface BatchRecord {
+  id: string;
+  batchNo: string;
+  beanType: string;
+  beanWeight: number;
+  createdAt: string;
+  status: 'active' | 'completed';
+  soakingId?: string;
+  grindingId?: string;
+  coagulatingId?: string;
+  pressingId?: string;
+  marinatingId?: string;
+  fryingId?: string;
+  note?: string;
+}
+
 export interface SoakingRecord {
   id: string;
+  batchId?: string;
   beanType: string;
   beanWeight: number;
   startTime: string;
@@ -18,9 +32,9 @@ export interface SoakingRecord {
   note?: string;
 }
 
-// 磨浆记录
 export interface GrindingRecord {
   id: string;
+  batchId?: string;
   beanWeight: number;
   waterAmount: number;
   startTime: string;
@@ -34,9 +48,9 @@ export interface GrindingRecord {
   note?: string;
 }
 
-// 煮浆记录
 export interface BoilingRecord {
   id: string;
+  batchId?: string;
   soyMilkAmount: number;
   startTime: string;
   boilingDuration: number;
@@ -48,9 +62,9 @@ export interface BoilingRecord {
   note?: string;
 }
 
-// 点浆凝固记录
 export interface CoagulatingRecord {
   id: string;
+  batchId?: string;
   soyMilkAmount: number;
   coagulantType: 'gypsum' | 'brine';
   coagulantAmount: number;
@@ -62,9 +76,9 @@ export interface CoagulatingRecord {
   note?: string;
 }
 
-// 压制成型记录
 export interface PressingRecord {
   id: string;
+  batchId?: string;
   productType: 'tofu' | 'tofu_pudding' | 'dried_tofu' | 'tofu_skin';
   amount: number;
   startTime: string;
@@ -75,9 +89,9 @@ export interface PressingRecord {
   note?: string;
 }
 
-// 卤制记录
 export interface MarinatingRecord {
   id: string;
+  batchId?: string;
   productType: 'dried_tofu' | 'tofu_puff';
   amount: number;
   marinadeType: string;
@@ -89,9 +103,9 @@ export interface MarinatingRecord {
   note?: string;
 }
 
-// 油炸记录
 export interface FryingRecord {
   id: string;
+  batchId?: string;
   productType: 'tofu_puff' | 'fried_dried_tofu';
   amount: number;
   oilType: string;
@@ -103,33 +117,39 @@ export interface FryingRecord {
   note?: string;
 }
 
-// 配送订单
+export interface DeliveryItem {
+  product: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+}
+
 export interface DeliveryOrder {
   id: string;
   customer: string;
-  product: string;
-  quantity: number;
+  items: DeliveryItem[];
   deliveryDate: string;
   deliveryTime: string;
   address?: string;
   contact?: string;
   phone?: string;
   status: 'pending' | 'delivering' | 'delivered' | 'cancelled';
+  incomeGenerated?: boolean;
   note?: string;
 }
 
-// 收支记录
 export interface AccountingRecord {
   id: string;
   type: 'income' | 'expense';
   category: string;
   amount: number;
   date: string;
+  createdAt: number;
   description?: string;
   note?: string;
+  sourceId?: string;
 }
 
-// 今日统计
 export interface DailyStats {
   date: string;
   beanUsed: number;

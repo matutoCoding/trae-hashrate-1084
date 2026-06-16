@@ -11,7 +11,6 @@ import {
   DailyStats
 } from '@/types/production';
 
-// 黄豆浸泡记录
 export const soakingRecords: SoakingRecord[] = [
   {
     id: 's001',
@@ -46,7 +45,6 @@ export const soakingRecords: SoakingRecord[] = [
   }
 ];
 
-// 磨浆记录
 export const grindingRecords: GrindingRecord[] = [
   {
     id: 'g001',
@@ -74,7 +72,6 @@ export const grindingRecords: GrindingRecord[] = [
   }
 ];
 
-// 煮浆记录
 export const boilingRecords: BoilingRecord[] = [
   {
     id: 'b001',
@@ -100,7 +97,6 @@ export const boilingRecords: BoilingRecord[] = [
   }
 ];
 
-// 点浆凝固记录
 export const coagulatingRecords: CoagulatingRecord[] = [
   {
     id: 'c001',
@@ -128,7 +124,6 @@ export const coagulatingRecords: CoagulatingRecord[] = [
   }
 ];
 
-// 压制成型记录
 export const pressingRecords: PressingRecord[] = [
   {
     id: 'p001',
@@ -163,7 +158,6 @@ export const pressingRecords: PressingRecord[] = [
   }
 ];
 
-// 卤制记录
 export const marinatingRecords: MarinatingRecord[] = [
   {
     id: 'm001',
@@ -190,7 +184,6 @@ export const marinatingRecords: MarinatingRecord[] = [
   }
 ];
 
-// 油炸记录
 export const fryingRecords: FryingRecord[] = [
   {
     id: 'f001',
@@ -217,26 +210,30 @@ export const fryingRecords: FryingRecord[] = [
   }
 ];
 
-// 配送订单
 export const deliveryOrders: DeliveryOrder[] = [
   {
     id: 'd001',
     customer: '张记早餐店',
-    product: '嫩豆腐',
-    quantity: 20,
+    items: [
+      { product: '嫩豆腐', quantity: 20, unit: '斤', unitPrice: 3.5 },
+      { product: '豆腐脑', quantity: 30, unit: '碗', unitPrice: 3 }
+    ],
     deliveryDate: '2024-01-16',
     deliveryTime: '07:30',
     address: '城东路128号',
     contact: '张老板',
     phone: '138****1234',
     status: 'delivered',
+    incomeGenerated: true,
     note: '早上7点半前送到'
   },
   {
     id: 'd002',
     customer: '李记饭馆',
-    product: '老豆腐',
-    quantity: 30,
+    items: [
+      { product: '老豆腐', quantity: 30, unit: '斤', unitPrice: 4 },
+      { product: '油豆腐', quantity: 10, unit: '斤', unitPrice: 8 }
+    ],
     deliveryDate: '2024-01-16',
     deliveryTime: '09:00',
     address: '人民路56号',
@@ -247,8 +244,10 @@ export const deliveryOrders: DeliveryOrder[] = [
   {
     id: 'd003',
     customer: '王家超市',
-    product: '豆干',
-    quantity: 15,
+    items: [
+      { product: '豆干', quantity: 15, unit: '斤', unitPrice: 12 },
+      { product: '千张', quantity: 10, unit: '斤', unitPrice: 6 }
+    ],
     deliveryDate: '2024-01-16',
     deliveryTime: '10:30',
     address: '建设街88号',
@@ -260,18 +259,20 @@ export const deliveryOrders: DeliveryOrder[] = [
   {
     id: 'd004',
     customer: '陈记早餐铺',
-    product: '豆腐脑',
-    quantity: 30,
+    items: [
+      { product: '嫩豆腐', quantity: 15, unit: '斤', unitPrice: 3.5 },
+      { product: '豆腐脑', quantity: 30, unit: '碗', unitPrice: 3 }
+    ],
     deliveryDate: '2024-01-16',
     deliveryTime: '06:30',
     address: '幸福路32号',
     contact: '陈师傅',
     phone: '136****3456',
-    status: 'delivered'
+    status: 'delivered',
+    incomeGenerated: true
   }
 ];
 
-// 收支记录
 export const accountingRecords: AccountingRecord[] = [
   {
     id: 'a001',
@@ -279,6 +280,7 @@ export const accountingRecords: AccountingRecord[] = [
     category: '黄豆采购',
     amount: 280,
     date: '2024-01-16',
+    createdAt: 1705362000000,
     description: '采购东北大豆50kg',
     note: '批发商送货上门'
   },
@@ -288,6 +290,7 @@ export const accountingRecords: AccountingRecord[] = [
     category: '凝固剂',
     amount: 45,
     date: '2024-01-16',
+    createdAt: 1705362600000,
     description: '采购石膏粉、盐卤',
     note: '各5公斤'
   },
@@ -297,6 +300,7 @@ export const accountingRecords: AccountingRecord[] = [
     category: '燃料水电',
     amount: 30,
     date: '2024-01-16',
+    createdAt: 1705363200000,
     description: '今日煤气费',
     note: ''
   },
@@ -306,6 +310,7 @@ export const accountingRecords: AccountingRecord[] = [
     category: '豆腐销售',
     amount: 520,
     date: '2024-01-16',
+    createdAt: 1705365600000,
     description: '张记早餐店、李记饭馆等批发',
     note: '月结客户'
   },
@@ -315,6 +320,7 @@ export const accountingRecords: AccountingRecord[] = [
     category: '豆干销售',
     amount: 280,
     date: '2024-01-16',
+    createdAt: 1705366200000,
     description: '门店零售豆干、千张等',
     note: '散客零售'
   },
@@ -324,6 +330,7 @@ export const accountingRecords: AccountingRecord[] = [
     category: '油豆腐销售',
     amount: 240,
     date: '2024-01-16',
+    createdAt: 1705366800000,
     description: '王家超市配送',
     note: '每周二、四、六供货'
   },
@@ -333,12 +340,12 @@ export const accountingRecords: AccountingRecord[] = [
     category: '人工工资',
     amount: 200,
     date: '2024-01-16',
+    createdAt: 1705374000000,
     description: '今日人工成本',
     note: '王师傅+李师傅'
   }
 ];
 
-// 今日统计
 export const dailyStats: DailyStats = {
   date: '2024-01-16',
   beanUsed: 110,
@@ -351,7 +358,6 @@ export const dailyStats: DailyStats = {
   netProfit: 485
 };
 
-// 产品类型映射
 export const productTypeMap: Record<string, string> = {
   tofu: '嫩豆腐',
   tofu_pudding: '豆腐脑',
@@ -361,7 +367,6 @@ export const productTypeMap: Record<string, string> = {
   fried_dried_tofu: '炸豆干'
 };
 
-// 状态映射
 export const statusMap: Record<string, { text: string; color: string }> = {
   pending: { text: '待开始', color: '#86909C' },
   in_progress: { text: '进行中', color: '#F5A623' },

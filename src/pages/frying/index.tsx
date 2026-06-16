@@ -108,11 +108,11 @@ const FryingPage: React.FC = () => {
 
     marinatingService.add({
       productType: marinatingForm.productType,
-      amount: Number(marinadingForm.amount),
+      amount: Number(marinatingForm.amount),
       marinadeType: marinatingForm.marinadeType,
       startTime: marinatingForm.startTime || getNowTime(),
-      duration: Number(marinadingForm.duration),
-      temperature: Number(marinadingForm.temperature),
+      duration: Number(marinatingForm.duration),
+      temperature: Number(marinatingForm.temperature),
       operator: marinatingForm.operator,
       note: marinatingForm.note
     });

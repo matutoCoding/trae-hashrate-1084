@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -10,7 +10,8 @@ import {
   coagulatingService,
   pressingService,
   deliveryService,
-  accountingService
+  accountingService,
+  dashboardService
 } from '@/services/dataService';
 
 const quickEntries = [
@@ -24,6 +25,15 @@ const quickEntries = [
   { icon: '💰', text: '记账', bg: '#AED581', page: '/pages/accounting/index', isTab: true }
 ];
 
+const dashboardMetrics = [
+  { icon: '🫘', label: '用豆量', valueKey: 'beanUsed', unit: 'kg', page: '/pages/soaking/index', isTab: false },
+  { icon: '🧈', label: '成品产量', valueKey: 'totalOutput', unit: '斤', page: '/pages/pressing/index', isTab: false },
+  { icon: '🚚', label: '配送数量', valueKey: 'deliveryQuantity', unit: '斤', page: '/pages/delivery/index', isTab: true, subKey: 'deliveryOrders', subUnit: '单' },
+  { icon: '💰', label: '今日收入', valueKey: 'totalIncome', unit: '元', page: '/pages/accounting/index', isTab: true },
+  { icon: '📉', label: '今日支出', valueKey: 'totalExpense', unit: '元', page: '/pages/accounting/index', isTab: true },
+  { icon: '📊', label: '预估利润', valueKey: 'netProfit', unit: '元', page: '/pages/accounting/index', isTab: true, isProfit: true }
+];
+
 const HomePage: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [soakingData, setSoakingData] = useState<any[]>([]);
@@ -31,6 +41,8 @@ const HomePage: React.FC = () => {
   const [coagulatingData, setCoagulatingData] = useState<any[]>([]);
   const [pressingData, setPressingData] = useState<any[]>([]);
   const [accountingStats, setAccountingStats] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const dashboardTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadData = useCallback(() => {
     setSoakingData(soakingService.getAll().filter(r => r.status === 'in_progress'));
@@ -38,6 +50,7 @@ const HomePage: React.FC = () => {
     setCoagulatingData(coagulatingService.getAll().filter(r => r.status === 'in_progress'));
     setPressingData(pressingService.getAll().filter(r => r.status === 'in_progress'));
     setAccountingStats(accountingService.getTodayStats());
+    setDashboardData(dashboardService.getTodayDashboard());
   }, []);
 
   useEffect(() => {
@@ -50,6 +63,17 @@ const HomePage: React.FC = () => {
     }, 3000);
     return () => clearInterval(timer);
   }, [loadData]);
+
+  useEffect(() => {
+    dashboardTimerRef.current = setInterval(() => {
+      setDashboardData(dashboardService.getTodayDashboard());
+    }, 5000);
+    return () => {
+      if (dashboardTimerRef.current) {
+        clearInterval(dashboardTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -138,6 +162,39 @@ const HomePage: React.FC = () => {
             footerText="预估收入"
             onClick={() => handleQuickEntry('/pages/accounting/index', true)}
           />
+        </View>
+      </View>
+
+      <View className={styles.dashboardSection}>
+        <Text className={styles.sectionTitle}>📊 今日经营看板</Text>
+        <View className={styles.dashboardGrid}>
+          {dashboardMetrics.map((metric, index) => {
+            const value = dashboardData?.[metric.valueKey] ?? 0;
+            const isProfit = metric.isProfit;
+            const valueClass = isProfit
+              ? value >= 0 ? styles.profit : styles.loss
+              : '';
+
+            return (
+              <View
+                key={index}
+                className={styles.dashboardCard}
+                onClick={() => handleQuickEntry(metric.page, metric.isTab)}
+              >
+                <Text className={styles.dashboardIcon}>{metric.icon}</Text>
+                <Text className={styles.dashboardLabel}>{metric.label}</Text>
+                <Text className={`${styles.dashboardValue} ${valueClass}`}>
+                  {value}
+                  <Text className={styles.dashboardUnit}>{metric.unit}</Text>
+                </Text>
+                {metric.subKey && dashboardData && (
+                  <Text className={styles.dashboardSub}>
+                    {dashboardData[metric.subKey]}{metric.subUnit}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
         </View>
       </View>
 

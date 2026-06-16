@@ -1,12 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, Input, Textarea } from '@tarojs/components';
+import { View, Text, ScrollView, Input, Textarea, Picker } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import {
   deliveryService,
-  getNowTime
+  accountingService,
+  getTodayDate
 } from '@/services/dataService';
-import type { DeliveryOrder } from '@/types/production';
+import type { DeliveryOrder, DeliveryItem } from '@/types/production';
 
 const statusTextMap: Record<string, string> = {
   pending: '待配送',
@@ -22,14 +23,7 @@ const statusColorMap: Record<string, string> = {
   cancelled: 'cancelled'
 };
 
-const productOptions = [
-  { key: '嫩豆腐', label: '嫩豆腐' },
-  { key: '老豆腐', label: '老豆腐' },
-  { key: '豆干', label: '豆干' },
-  { key: '千张', label: '千张' },
-  { key: '油豆腐', label: '油豆腐' },
-  { key: '豆腐脑', label: '豆腐脑' }
-];
+const productOptions = ['嫩豆腐', '老豆腐', '豆干', '千张', '油豆腐', '豆腐脑'];
 
 const customerOptions = [
   '张记早点铺',
@@ -40,22 +34,33 @@ const customerOptions = [
   '陈氏豆制品'
 ];
 
+interface FormItem {
+  product: string;
+  quantity: string;
+  unit: string;
+  unitPrice: string;
+}
+
+const createEmptyItem = (): FormItem => ({
+  product: '嫩豆腐',
+  quantity: '',
+  unit: '斤',
+  unitPrice: ''
+});
+
 const DeliveryPage: React.FC = () => {
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  const [formData, setFormData] = useState({
-    customer: '',
-    product: '嫩豆腐',
-    quantity: '',
-    deliveryDate: '',
-    deliveryTime: '',
-    address: '',
-    contact: '',
-    phone: '',
-    note: ''
-  });
+  const [customer, setCustomer] = useState('');
+  const [items, setItems] = useState<FormItem[]>([createEmptyItem()]);
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryTime, setDeliveryTime] = useState('');
+  const [address, setAddress] = useState('');
+  const [contact, setContact] = useState('');
+  const [phone, setPhone] = useState('');
+  const [note, setNote] = useState('');
 
   const loadData = useCallback(() => {
     let allOrders = deliveryService.getAll();
@@ -77,39 +82,62 @@ const DeliveryPage: React.FC = () => {
   }, [loadData]);
 
   const handleAdd = () => {
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    setFormData({
-      customer: '',
-      product: '嫩豆腐',
-      quantity: '',
-      deliveryDate: dateStr,
-      deliveryTime: '07:00',
-      address: '',
-      contact: '',
-      phone: '',
-      note: ''
-    });
+    const today = getTodayDate();
+    setCustomer('');
+    setItems([createEmptyItem()]);
+    setDeliveryDate(today);
+    setDeliveryTime('07:00');
+    setAddress('');
+    setContact('');
+    setPhone('');
+    setNote('');
     setShowForm(true);
   };
 
+  const updateFormItem = (index: number, field: keyof FormItem, value: string) => {
+    setItems(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const addItemRow = () => {
+    setItems(prev => [...prev, createEmptyItem()]);
+  };
+
+  const removeItemRow = (index: number) => {
+    setItems(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = () => {
-    if (!formData.customer || !formData.quantity) {
-      Taro.showToast({ title: '请填写客户和数量', icon: 'none' });
+    if (!customer) {
+      Taro.showToast({ title: '请填写客户名称', icon: 'none' });
+      return;
+    }
+    const validItems = items.filter(it => it.quantity && Number(it.quantity) > 0);
+    if (validItems.length === 0) {
+      Taro.showToast({ title: '请至少填写一项商品数量', icon: 'none' });
       return;
     }
 
+    const deliveryItems: DeliveryItem[] = validItems.map(it => ({
+      product: it.product,
+      quantity: Number(it.quantity),
+      unit: it.unit || '斤',
+      unitPrice: Number(it.unitPrice) || 0
+    }));
+
     deliveryService.add({
-      customer: formData.customer,
-      product: formData.product,
-      quantity: Number(formData.quantity),
-      deliveryDate: formData.deliveryDate,
-      deliveryTime: formData.deliveryTime,
-      address: formData.address,
-      contact: formData.contact,
-      phone: formData.phone,
-      note: formData.note
-    });
+      customer,
+      items: deliveryItems,
+      deliveryDate,
+      deliveryTime,
+      address,
+      contact,
+      phone,
+      note
+    } as Omit<DeliveryOrder, 'id'>);
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
     setShowForm(false);
@@ -117,9 +145,19 @@ const DeliveryPage: React.FC = () => {
   };
 
   const handleUpdateStatus = (id: string, status: string) => {
-    deliveryService.update(id, { status: status as any });
+    deliveryService.update(id, { status: status as DeliveryOrder['status'] });
     loadData();
     Taro.showToast({ title: '状态已更新', icon: 'success' });
+  };
+
+  const handleGenerateIncome = (order: DeliveryOrder) => {
+    if (order.incomeGenerated) {
+      Taro.showToast({ title: '已生成收入', icon: 'none' });
+      return;
+    }
+    deliveryService.generateIncome(order);
+    Taro.showToast({ title: '收入已生成', icon: 'success' });
+    loadData();
   };
 
   const handleDelete = (id: string) => {
@@ -135,6 +173,12 @@ const DeliveryPage: React.FC = () => {
       }
     });
   };
+
+  const getOrderTotal = (order: DeliveryOrder) =>
+    order.items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+
+  const getOrderTotalQuantity = (order: DeliveryOrder) =>
+    order.items.reduce((sum, i) => sum + i.quantity, 0);
 
   const stats = deliveryService.getTodayStats();
 
@@ -160,8 +204,12 @@ const DeliveryPage: React.FC = () => {
             <Text className={styles.statLabel}>今日订单</Text>
           </View>
           <View className={styles.statItem}>
-            <Text className={styles.statValue}>{stats.totalQuantity}斤</Text>
+            <Text className={styles.statValue}>{stats.totalQuantity}</Text>
             <Text className={styles.statLabel}>总配送量</Text>
+          </View>
+          <View className={styles.statItem}>
+            <Text className={styles.statValue}>¥{stats.totalAmount}</Text>
+            <Text className={styles.statLabel}>总金额</Text>
           </View>
           <View className={styles.statItem}>
             <Text className={styles.statValue}>{stats.delivered}</Text>
@@ -202,13 +250,19 @@ const DeliveryPage: React.FC = () => {
                 </View>
 
                 <View className={styles.orderInfo}>
+                  {order.items.map((item, idx) => (
+                    <View key={idx} className={styles.orderInfoRow}>
+                      <Text className={styles.orderInfoLabel}>{item.product}:</Text>
+                      <Text className={styles.orderInfoValue}>
+                        {item.quantity}{item.unit} × ¥{item.unitPrice}
+                      </Text>
+                    </View>
+                  ))}
                   <View className={styles.orderInfoRow}>
-                    <Text className={styles.orderInfoLabel}>商品:</Text>
-                    <Text className={styles.orderInfoValue}>{order.product}</Text>
-                  </View>
-                  <View className={styles.orderInfoRow}>
-                    <Text className={styles.orderInfoLabel}>数量:</Text>
-                    <Text className={styles.orderInfoValue}>{order.quantity}斤</Text>
+                    <Text className={styles.orderInfoLabel}>合计:</Text>
+                    <Text className={styles.orderInfoValue}>
+                      {getOrderTotalQuantity(order)}件 / ¥{getOrderTotal(order)}
+                    </Text>
                   </View>
                   <View className={styles.orderInfoRow}>
                     <Text className={styles.orderInfoLabel}>送达时间:</Text>
@@ -234,26 +288,37 @@ const DeliveryPage: React.FC = () => {
 
                 <View className={styles.orderActions}>
                   {order.status === 'pending' && (
-                    <>
-                      <Text
-                        className={`${styles.actionBtn} ${styles.primary}`}
-                        onClick={() => handleUpdateStatus(order.id, 'delivering')}
-                      >
-                        开始配送
-                      </Text>
-                    </>
+                    <Text
+                      className={`${styles.actionBtn} ${styles.primary}`}
+                      onClick={() => handleUpdateStatus(order.id, 'delivering')}
+                    >
+                      开始配送
+                    </Text>
                   )}
                   {order.status === 'delivering' && (
-                    <>
-                      <Text
-                        className={`${styles.actionBtn} ${styles.success}`}
-                        onClick={() => handleUpdateStatus(order.id, 'delivered')}
-                      >
-                        确认送达
-                      </Text>
-                    </>
+                    <Text
+                      className={`${styles.actionBtn} ${styles.success}`}
+                      onClick={() => handleUpdateStatus(order.id, 'delivered')}
+                    >
+                      确认送达
+                    </Text>
                   )}
-                  {order.status === 'delivered' && null}
+                  {order.status === 'delivered' && !order.incomeGenerated && (
+                    <Text
+                      className={styles.generateBtn}
+                      onClick={() => handleGenerateIncome(order)}
+                    >
+                      生成收入
+                    </Text>
+                  )}
+                  {order.status === 'delivered' && order.incomeGenerated && (
+                    <Text
+                      className={styles.generateBtn}
+                      style={{ opacity: 0.5 }}
+                    >
+                      已入账
+                    </Text>
+                  )}
                   <Text
                     className={`${styles.actionBtn} ${styles.danger}`}
                     onClick={() => handleDelete(order.id)}
@@ -282,8 +347,8 @@ const DeliveryPage: React.FC = () => {
                   {customerOptions.map(c => (
                     <Text
                       key={c}
-                      className={`${styles.quickOption} ${formData.customer === c ? styles.active : ''}`}
-                      onClick={() => setFormData({ ...formData, customer: c })}
+                      className={`${styles.quickOption} ${customer === c ? styles.active : ''}`}
+                      onClick={() => setCustomer(c)}
                     >
                       {c}
                     </Text>
@@ -291,37 +356,67 @@ const DeliveryPage: React.FC = () => {
                 </View>
                 <Input
                   className={styles.formInput}
-                  value={formData.customer}
-                  onInput={e => setFormData({ ...formData, customer: e.detail.value })}
+                  value={customer}
+                  onInput={e => setCustomer(e.detail.value)}
                   placeholder="或手动输入客户名称"
                 />
               </View>
 
               <View className={styles.formGroup}>
-                <Text className={styles.formLabel}>商品</Text>
-                <View className={styles.formRadioGroup}>
-                  {productOptions.map(opt => (
-                    <Text
-                      key={opt.key}
-                      className={`${styles.formRadioItem} ${formData.product === opt.key ? styles.active : ''}`}
-                      onClick={() => setFormData({ ...formData, product: opt.key })}
+                <Text className={styles.formLabel}>商品列表</Text>
+                {items.map((item, idx) => (
+                  <View key={idx} className={styles.itemRow}>
+                    <Picker
+                      mode='selector'
+                      range={productOptions}
+                      value={productOptions.indexOf(item.product)}
+                      onChange={e => updateFormItem(idx, 'product', productOptions[Number(e.detail.value)])}
                     >
-                      {opt.label}
-                    </Text>
-                  ))}
-                </View>
+                      <View className={styles.formInput} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text>{item.product}</Text>
+                        <Text style={{ color: '#999', fontSize: '22rpx' }}>▼</Text>
+                      </View>
+                    </Picker>
+                    <Input
+                      type='digit'
+                      className={styles.formInput}
+                      style={{ flex: 1 }}
+                      value={item.quantity}
+                      onInput={e => updateFormItem(idx, 'quantity', e.detail.value)}
+                      placeholder='数量'
+                    />
+                    <Input
+                      className={styles.formInput}
+                      style={{ width: '80rpx', flex: 'none', textAlign: 'center' }}
+                      value={item.unit}
+                      onInput={e => updateFormItem(idx, 'unit', e.detail.value)}
+                      placeholder='单位'
+                    />
+                    <Input
+                      type='digit'
+                      className={styles.formInput}
+                      style={{ flex: 1 }}
+                      value={item.unitPrice}
+                      onInput={e => updateFormItem(idx, 'unitPrice', e.detail.value)}
+                      placeholder='单价'
+                    />
+                    {items.length > 1 && (
+                      <Text className={styles.itemRemove} onClick={() => removeItemRow(idx)}>✕</Text>
+                    )}
+                  </View>
+                ))}
+                <Text className={styles.addItemBtn} onClick={addItemRow}>+ 添加商品</Text>
               </View>
 
               <View className={styles.formRow}>
                 <View className={styles.formRowItem}>
                   <View className={styles.formGroup}>
-                    <Text className={styles.formLabel}>数量 (斤)</Text>
+                    <Text className={styles.formLabel}>送达日期</Text>
                     <Input
-                      type="digit"
                       className={styles.formInput}
-                      value={formData.quantity}
-                      onInput={e => setFormData({ ...formData, quantity: e.detail.value })}
-                      placeholder="请输入"
+                      value={deliveryDate}
+                      onInput={e => setDeliveryDate(e.detail.value)}
+                      placeholder='YYYY-MM-DD'
                     />
                   </View>
                 </View>
@@ -330,31 +425,21 @@ const DeliveryPage: React.FC = () => {
                     <Text className={styles.formLabel}>送达时间</Text>
                     <Input
                       className={styles.formInput}
-                      value={formData.deliveryTime}
-                      onInput={e => setFormData({ ...formData, deliveryTime: e.detail.value })}
-                      placeholder="HH:mm"
+                      value={deliveryTime}
+                      onInput={e => setDeliveryTime(e.detail.value)}
+                      placeholder='HH:mm'
                     />
                   </View>
                 </View>
               </View>
 
               <View className={styles.formGroup}>
-                <Text className={styles.formLabel}>送达日期</Text>
-                <Input
-                  className={styles.formInput}
-                  value={formData.deliveryDate}
-                  onInput={e => setFormData({ ...formData, deliveryDate: e.detail.value })}
-                  placeholder="YYYY-MM-DD"
-                />
-              </View>
-
-              <View className={styles.formGroup}>
                 <Text className={styles.formLabel}>配送地址</Text>
                 <Input
                   className={styles.formInput}
-                  value={formData.address}
-                  onInput={e => setFormData({ ...formData, address: e.detail.value })}
-                  placeholder="请输入地址"
+                  value={address}
+                  onInput={e => setAddress(e.detail.value)}
+                  placeholder='请输入地址'
                 />
               </View>
 
@@ -364,9 +449,9 @@ const DeliveryPage: React.FC = () => {
                     <Text className={styles.formLabel}>联系人</Text>
                     <Input
                       className={styles.formInput}
-                      value={formData.contact}
-                      onInput={e => setFormData({ ...formData, contact: e.detail.value })}
-                      placeholder="请输入"
+                      value={contact}
+                      onInput={e => setContact(e.detail.value)}
+                      placeholder='请输入'
                     />
                   </View>
                 </View>
@@ -374,11 +459,11 @@ const DeliveryPage: React.FC = () => {
                   <View className={styles.formGroup}>
                     <Text className={styles.formLabel}>联系电话</Text>
                     <Input
-                      type="number"
+                      type='number'
                       className={styles.formInput}
-                      value={formData.phone}
-                      onInput={e => setFormData({ ...formData, phone: e.detail.value })}
-                      placeholder="请输入"
+                      value={phone}
+                      onInput={e => setPhone(e.detail.value)}
+                      placeholder='请输入'
                     />
                   </View>
                 </View>
@@ -388,9 +473,9 @@ const DeliveryPage: React.FC = () => {
                 <Text className={styles.formLabel}>备注</Text>
                 <Textarea
                   className={styles.formTextarea}
-                  value={formData.note}
-                  onInput={e => setFormData({ ...formData, note: e.detail.value })}
-                  placeholder="请输入备注信息"
+                  value={note}
+                  onInput={e => setNote(e.detail.value)}
+                  placeholder='请输入备注信息'
                   maxlength={200}
                 />
               </View>

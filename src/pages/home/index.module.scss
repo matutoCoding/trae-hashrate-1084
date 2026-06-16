@@ -47,6 +47,69 @@
   gap: $spacing-md;
 }
 
+.dashboardSection {
+  padding: 0 $page-padding;
+  margin-bottom: $spacing-lg;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $spacing-md;
+}
+
+.dashboardCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  text-align: center;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.96);
+    transition: all $transition-base;
+  }
+}
+
+.dashboardIcon {
+  font-size: 40rpx;
+  margin-bottom: $spacing-xs;
+}
+
+.dashboardLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.dashboardValue {
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  color: $color-text-primary;
+}
+
+.dashboardUnit {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-left: 4rpx;
+}
+
+.profit {
+  color: #4CAF50;
+}
+
+.loss {
+  color: #F44336;
+}
+
+.dashboardSub {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
 .quickEntrySection {
   padding: 0 $page-padding;
   margin-bottom: $spacing-lg;

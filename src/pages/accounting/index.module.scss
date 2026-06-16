@@ -230,10 +230,6 @@
   align-items: center;
   gap: $spacing-md;
   box-shadow: $shadow-card;
-
-  &:active {
-    opacity: 0.9;
-  }
 }
 
 .recordIcon {
@@ -274,8 +270,30 @@
   color: $color-text-tertiary;
 }
 
-.recordAmount {
+.recordRight {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: $spacing-xs;
+}
+
+.deleteBtn {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+
+  &:active {
+    color: $color-error;
+  }
+}
+
+.deleteHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  text-align: center;
+  padding: $spacing-xs 0;
+  margin-top: $spacing-xs;
 }
 
 .amountIncome {

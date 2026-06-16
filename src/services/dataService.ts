@@ -1,5 +1,6 @@
 import { storage, generateId, getTodayDate, getNowTime } from '@/utils/storage';
 import {
+  BatchRecord,
   SoakingRecord,
   GrindingRecord,
   BoilingRecord,
@@ -8,6 +9,7 @@ import {
   MarinatingRecord,
   FryingRecord,
   DeliveryOrder,
+  DeliveryItem,
   AccountingRecord,
   DailyStats
 } from '@/types/production';
@@ -25,6 +27,7 @@ import {
 } from '@/data/mockData';
 
 const STORAGE_KEYS = {
+  BATCH: 'batch_records',
   SOAKING: 'soaking_records',
   GRINDING: 'grinding_records',
   BOILING: 'boiling_records',
@@ -35,13 +38,14 @@ const STORAGE_KEYS = {
   DELIVERY: 'delivery_orders',
   ACCOUNTING: 'accounting_records',
   STATS: 'daily_stats',
-  INITIALIZED: 'data_initialized'
+  INITIALIZED: 'data_initialized_v2'
 };
 
 const initializeData = () => {
   const initialized = storage.get<boolean>(STORAGE_KEYS.INITIALIZED, false);
   if (!initialized) {
     console.log('[DataService] 初始化默认数据');
+    storage.set(STORAGE_KEYS.BATCH, []);
     storage.set(STORAGE_KEYS.SOAKING, defaultSoaking);
     storage.set(STORAGE_KEYS.GRINDING, defaultGrinding);
     storage.set(STORAGE_KEYS.BOILING, defaultBoiling);
@@ -58,40 +62,122 @@ const initializeData = () => {
 
 initializeData();
 
-// 黄豆浸泡
-export const soakingService = {
-  getAll(): SoakingRecord[] {
-    return storage.get<SoakingRecord[]>(STORAGE_KEYS.SOAKING, []);
+export const batchService = {
+  getAll(): BatchRecord[] {
+    return storage.get<BatchRecord[]>(STORAGE_KEYS.BATCH, []);
   },
 
-  add(data: Omit<SoakingRecord, 'id' | 'status'>): SoakingRecord {
+  add(data: Omit<BatchRecord, 'id'>): BatchRecord {
     const records = this.getAll();
-    const newRecord: SoakingRecord = {
-      ...data,
-      id: generateId('s'),
-      status: 'pending'
-    };
+    const newRecord: BatchRecord = { ...data, id: generateId('batch') };
     records.unshift(newRecord);
-    storage.set(STORAGE_KEYS.SOAKING, records);
-    console.log('[SoakingService] 新增记录:', newRecord);
+    storage.set(STORAGE_KEYS.BATCH, records);
     return newRecord;
   },
 
-  update(id: string, data: Partial<SoakingRecord>): SoakingRecord | null {
+  update(id: string, data: Partial<BatchRecord>): BatchRecord | null {
     const records = this.getAll();
     const index = records.findIndex(r => r.id === id);
     if (index === -1) return null;
     records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.SOAKING, records);
+    storage.set(STORAGE_KEYS.BATCH, records);
     return records[index];
   },
 
   remove(id: string): boolean {
     const records = this.getAll();
     const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.SOAKING, filtered);
+    storage.set(STORAGE_KEYS.BATCH, filtered);
     return filtered.length < records.length;
   },
+
+  getById(id: string): BatchRecord | null {
+    return this.getAll().find(r => r.id === id) || null;
+  },
+
+  getActive(): BatchRecord[] {
+    return this.getAll().filter(r => r.status === 'active');
+  },
+
+  generateBatchNo(): string {
+    const today = getTodayDate().replace(/-/g, '');
+    const existing = this.getAll().filter(r => r.batchNo.startsWith(today));
+    const seq = String(existing.length + 1).padStart(3, '0');
+    return `PC${today}${seq}`;
+  },
+
+  getBatchDetail(id: string) {
+    const batch = this.getById(id);
+    if (!batch) return null;
+
+    const soaking = batch.soakingId
+      ? storage.get<SoakingRecord[]>(STORAGE_KEYS.SOAKING, []).find(r => r.id === batch.soakingId)
+      : undefined;
+    const grinding = batch.grindingId
+      ? storage.get<GrindingRecord[]>(STORAGE_KEYS.GRINDING, []).find(r => r.id === batch.grindingId)
+      : undefined;
+    const coagulating = batch.coagulatingId
+      ? storage.get<CoagulatingRecord[]>(STORAGE_KEYS.COAGULATING, []).find(r => r.id === batch.coagulatingId)
+      : undefined;
+    const pressing = batch.pressingId
+      ? storage.get<PressingRecord[]>(STORAGE_KEYS.PRESSING, []).find(r => r.id === batch.pressingId)
+      : undefined;
+    const marinating = batch.marinatingId
+      ? storage.get<MarinatingRecord[]>(STORAGE_KEYS.MARINATING, []).find(r => r.id === batch.marinatingId)
+      : undefined;
+    const frying = batch.fryingId
+      ? storage.get<FryingRecord[]>(STORAGE_KEYS.FRYING, []).find(r => r.id === batch.fryingId)
+      : undefined;
+
+    let yieldRate = 0;
+    if (pressing && batch.beanWeight > 0) {
+      yieldRate = (pressing.pressWeight / batch.beanWeight) * 100;
+    }
+
+    return {
+      batch,
+      soaking,
+      grinding,
+      coagulating,
+      pressing,
+      marinating,
+      frying,
+      yieldRate
+    };
+  }
+};
+
+function createCrudService<T extends { id: string }>(storageKey: string, idPrefix: string) {
+  return {
+    getAll(): T[] {
+      return storage.get<T[]>(storageKey, []);
+    },
+    add(data: Omit<T, 'id'>): T {
+      const records = this.getAll();
+      const newRecord = { ...data, id: generateId(idPrefix) } as T;
+      records.unshift(newRecord);
+      storage.set(storageKey, records);
+      return newRecord;
+    },
+    update(id: string, data: Partial<T>): T | null {
+      const records = this.getAll();
+      const index = records.findIndex(r => r.id === id);
+      if (index === -1) return null;
+      records[index] = { ...records[index], ...data };
+      storage.set(storageKey, records);
+      return records[index];
+    },
+    remove(id: string): boolean {
+      const records = this.getAll();
+      const filtered = records.filter(r => r.id !== id);
+      storage.set(storageKey, filtered);
+      return filtered.length < records.length;
+    }
+  };
+}
+
+export const soakingService = {
+  ...createCrudService<SoakingRecord>(STORAGE_KEYS.SOAKING, 's'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -106,40 +192,8 @@ export const soakingService = {
   }
 };
 
-// 磨浆
 export const grindingService = {
-  getAll(): GrindingRecord[] {
-    return storage.get<GrindingRecord[]>(STORAGE_KEYS.GRINDING, []);
-  },
-
-  add(data: Omit<GrindingRecord, 'id' | 'status'>): GrindingRecord {
-    const records = this.getAll();
-    const newRecord: GrindingRecord = {
-      ...data,
-      id: generateId('g'),
-      status: 'pending'
-    };
-    records.unshift(newRecord);
-    storage.set(STORAGE_KEYS.GRINDING, records);
-    console.log('[GrindingService] 新增记录:', newRecord);
-    return newRecord;
-  },
-
-  update(id: string, data: Partial<GrindingRecord>): GrindingRecord | null {
-    const records = this.getAll();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.GRINDING, records);
-    return records[index];
-  },
-
-  remove(id: string): boolean {
-    const records = this.getAll();
-    const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.GRINDING, filtered);
-    return filtered.length < records.length;
-  },
+  ...createCrudService<GrindingRecord>(STORAGE_KEYS.GRINDING, 'g'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -155,40 +209,8 @@ export const grindingService = {
   }
 };
 
-// 煮浆
 export const boilingService = {
-  getAll(): BoilingRecord[] {
-    return storage.get<BoilingRecord[]>(STORAGE_KEYS.BOILING, []);
-  },
-
-  add(data: Omit<BoilingRecord, 'id' | 'status'>): BoilingRecord {
-    const records = this.getAll();
-    const newRecord: BoilingRecord = {
-      ...data,
-      id: generateId('b'),
-      status: 'pending'
-    };
-    records.unshift(newRecord);
-    storage.set(STORAGE_KEYS.BOILING, records);
-    console.log('[BoilingService] 新增记录:', newRecord);
-    return newRecord;
-  },
-
-  update(id: string, data: Partial<BoilingRecord>): BoilingRecord | null {
-    const records = this.getAll();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.BOILING, records);
-    return records[index];
-  },
-
-  remove(id: string): boolean {
-    const records = this.getAll();
-    const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.BOILING, filtered);
-    return filtered.length < records.length;
-  },
+  ...createCrudService<BoilingRecord>(STORAGE_KEYS.BOILING, 'b'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -203,40 +225,8 @@ export const boilingService = {
   }
 };
 
-// 点浆凝固
 export const coagulatingService = {
-  getAll(): CoagulatingRecord[] {
-    return storage.get<CoagulatingRecord[]>(STORAGE_KEYS.COAGULATING, []);
-  },
-
-  add(data: Omit<CoagulatingRecord, 'id' | 'status'>): CoagulatingRecord {
-    const records = this.getAll();
-    const newRecord: CoagulatingRecord = {
-      ...data,
-      id: generateId('c'),
-      status: 'pending'
-    };
-    records.unshift(newRecord);
-    storage.set(STORAGE_KEYS.COAGULATING, records);
-    console.log('[CoagulatingService] 新增记录:', newRecord);
-    return newRecord;
-  },
-
-  update(id: string, data: Partial<CoagulatingRecord>): CoagulatingRecord | null {
-    const records = this.getAll();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.COAGULATING, records);
-    return records[index];
-  },
-
-  remove(id: string): boolean {
-    const records = this.getAll();
-    const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.COAGULATING, filtered);
-    return filtered.length < records.length;
-  },
+  ...createCrudService<CoagulatingRecord>(STORAGE_KEYS.COAGULATING, 'c'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -253,40 +243,8 @@ export const coagulatingService = {
   }
 };
 
-// 压制成型
 export const pressingService = {
-  getAll(): PressingRecord[] {
-    return storage.get<PressingRecord[]>(STORAGE_KEYS.PRESSING, []);
-  },
-
-  add(data: Omit<PressingRecord, 'id' | 'status'>): PressingRecord {
-    const records = this.getAll();
-    const newRecord: PressingRecord = {
-      ...data,
-      id: generateId('p'),
-      status: 'pending'
-    };
-    records.unshift(newRecord);
-    storage.set(STORAGE_KEYS.PRESSING, records);
-    console.log('[PressingService] 新增记录:', newRecord);
-    return newRecord;
-  },
-
-  update(id: string, data: Partial<PressingRecord>): PressingRecord | null {
-    const records = this.getAll();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.PRESSING, records);
-    return records[index];
-  },
-
-  remove(id: string): boolean {
-    const records = this.getAll();
-    const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.PRESSING, filtered);
-    return filtered.length < records.length;
-  },
+  ...createCrudService<PressingRecord>(STORAGE_KEYS.PRESSING, 'p'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -302,46 +260,15 @@ export const pressingService = {
       tofuAmount: productMap['tofu'] || 0,
       driedTofuAmount: productMap['dried_tofu'] || 0,
       tofuSkinAmount: productMap['tofu_skin'] || 0,
+      totalWeight: todayRecords.reduce((sum, r) => sum + r.pressWeight, 0),
       inProgress: todayRecords.filter(r => r.status === 'in_progress').length,
       completed: todayRecords.filter(r => r.status === 'completed').length
     };
   }
 };
 
-// 卤制
 export const marinatingService = {
-  getAll(): MarinatingRecord[] {
-    return storage.get<MarinatingRecord[]>(STORAGE_KEYS.MARINATING, []);
-  },
-
-  add(data: Omit<MarinatingRecord, 'id' | 'status'>): MarinatingRecord {
-    const records = this.getAll();
-    const newRecord: MarinatingRecord = {
-      ...data,
-      id: generateId('m'),
-      status: 'pending'
-    };
-    records.unshift(newRecord);
-    storage.set(STORAGE_KEYS.MARINATING, records);
-    console.log('[MarinatingService] 新增记录:', newRecord);
-    return newRecord;
-  },
-
-  update(id: string, data: Partial<MarinatingRecord>): MarinatingRecord | null {
-    const records = this.getAll();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.MARINATING, records);
-    return records[index];
-  },
-
-  remove(id: string): boolean {
-    const records = this.getAll();
-    const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.MARINATING, filtered);
-    return filtered.length < records.length;
-  },
+  ...createCrudService<MarinatingRecord>(STORAGE_KEYS.MARINATING, 'm'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -356,40 +283,8 @@ export const marinatingService = {
   }
 };
 
-// 油炸
 export const fryingService = {
-  getAll(): FryingRecord[] {
-    return storage.get<FryingRecord[]>(STORAGE_KEYS.FRYING, []);
-  },
-
-  add(data: Omit<FryingRecord, 'id' | 'status'>): FryingRecord {
-    const records = this.getAll();
-    const newRecord: FryingRecord = {
-      ...data,
-      id: generateId('f'),
-      status: 'pending'
-    };
-    records.unshift(newRecord);
-    storage.set(STORAGE_KEYS.FRYING, records);
-    console.log('[FryingService] 新增记录:', newRecord);
-    return newRecord;
-  },
-
-  update(id: string, data: Partial<FryingRecord>): FryingRecord | null {
-    const records = this.getAll();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.FRYING, records);
-    return records[index];
-  },
-
-  remove(id: string): boolean {
-    const records = this.getAll();
-    const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.FRYING, filtered);
-    return filtered.length < records.length;
-  },
+  ...createCrudService<FryingRecord>(STORAGE_KEYS.FRYING, 'f'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -404,40 +299,8 @@ export const fryingService = {
   }
 };
 
-// 配送订单
 export const deliveryService = {
-  getAll(): DeliveryOrder[] {
-    return storage.get<DeliveryOrder[]>(STORAGE_KEYS.DELIVERY, []);
-  },
-
-  add(data: Omit<DeliveryOrder, 'id'>): DeliveryOrder {
-    const records = this.getAll();
-    const newOrder: DeliveryOrder = {
-      ...data,
-      status: data.status || 'pending',
-      id: generateId('d')
-    };
-    records.unshift(newOrder);
-    storage.set(STORAGE_KEYS.DELIVERY, records);
-    console.log('[DeliveryService] 新增订单:', newOrder);
-    return newOrder;
-  },
-
-  update(id: string, data: Partial<DeliveryOrder>): DeliveryOrder | null {
-    const records = this.getAll();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.DELIVERY, records);
-    return records[index];
-  },
-
-  remove(id: string): boolean {
-    const records = this.getAll();
-    const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.DELIVERY, filtered);
-    return filtered.length < records.length;
-  },
+  ...createCrudService<DeliveryOrder>(STORAGE_KEYS.DELIVERY, 'd'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -445,47 +308,36 @@ export const deliveryService = {
     const todayRecords = records.filter(r => r.deliveryDate === today);
     return {
       totalOrders: todayRecords.length,
-      totalQuantity: todayRecords.reduce((sum, r) => sum + r.quantity, 0),
+      totalQuantity: todayRecords.reduce((sum, r) => sum + r.items.reduce((s, i) => s + i.quantity, 0), 0),
+      totalAmount: todayRecords.reduce((sum, r) => sum + r.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0), 0),
       pending: todayRecords.filter(r => r.status === 'pending').length,
       delivering: todayRecords.filter(r => r.status === 'delivering').length,
       delivered: todayRecords.filter(r => r.status === 'delivered').length
     };
+  },
+
+  generateIncome(order: DeliveryOrder): AccountingRecord | null {
+    if (order.incomeGenerated) return null;
+    const totalAmount = order.items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+    if (totalAmount <= 0) return null;
+    const itemDesc = order.items.map(i => `${i.product}${i.quantity}${i.unit}`).join('、');
+    const record = accountingService.add({
+      type: 'income',
+      category: '配送收入',
+      amount: totalAmount,
+      date: order.deliveryDate,
+      createdAt: Date.now(),
+      description: `${order.customer} - ${itemDesc}`,
+      note: `订单号: ${order.id}`,
+      sourceId: order.id
+    });
+    deliveryService.update(order.id, { incomeGenerated: true });
+    return record;
   }
 };
 
-// 收支记账
 export const accountingService = {
-  getAll(): AccountingRecord[] {
-    return storage.get<AccountingRecord[]>(STORAGE_KEYS.ACCOUNTING, []);
-  },
-
-  add(data: Omit<AccountingRecord, 'id'>): AccountingRecord {
-    const records = this.getAll();
-    const newRecord: AccountingRecord = {
-      ...data,
-      id: generateId('a')
-    };
-    records.unshift(newRecord);
-    storage.set(STORAGE_KEYS.ACCOUNTING, records);
-    console.log('[AccountingService] 新增记录:', newRecord);
-    return newRecord;
-  },
-
-  update(id: string, data: Partial<AccountingRecord>): AccountingRecord | null {
-    const records = this.getAll();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...data };
-    storage.set(STORAGE_KEYS.ACCOUNTING, records);
-    return records[index];
-  },
-
-  remove(id: string): boolean {
-    const records = this.getAll();
-    const filtered = records.filter(r => r.id !== id);
-    storage.set(STORAGE_KEYS.ACCOUNTING, filtered);
-    return filtered.length < records.length;
-  },
+  ...createCrudService<AccountingRecord>(STORAGE_KEYS.ACCOUNTING, 'a'),
 
   getTodayStats() {
     const records = this.getAll();
@@ -542,24 +394,44 @@ export const accountingService = {
   }
 };
 
-// 每日统计
-export const statsService = {
-  getDailyStats(): DailyStats {
+export const dashboardService = {
+  getTodayDashboard() {
     const soakingStats = soakingService.getTodayStats();
     const pressingStats = pressingService.getTodayStats();
     const deliveryStats = deliveryService.getTodayStats();
     const accountingStats = accountingService.getTodayStats();
+    const marinatingStats = marinatingService.getTodayStats();
+    const fryingStats = fryingService.getTodayStats();
 
     return {
       date: getTodayDate(),
       beanUsed: soakingStats.totalWeight,
+      totalOutput: pressingStats.totalWeight + marinatingStats.totalAmount + fryingStats.totalAmount,
       tofuProduced: pressingStats.tofuAmount,
       driedTofuProduced: pressingStats.driedTofuAmount,
-      tofuPuffProduced: fryingService.getTodayStats().totalAmount,
+      tofuPuffProduced: fryingStats.totalAmount,
       deliveryOrders: deliveryStats.totalOrders,
+      deliveryQuantity: deliveryStats.totalQuantity,
       totalIncome: accountingStats.totalIncome,
       totalExpense: accountingStats.totalExpense,
       netProfit: accountingStats.netProfit
+    };
+  }
+};
+
+export const statsService = {
+  getDailyStats(): DailyStats {
+    const dashboard = dashboardService.getTodayDashboard();
+    return {
+      date: dashboard.date,
+      beanUsed: dashboard.beanUsed,
+      tofuProduced: dashboard.tofuProduced,
+      driedTofuProduced: dashboard.driedTofuProduced,
+      tofuPuffProduced: dashboard.tofuPuffProduced,
+      deliveryOrders: dashboard.deliveryOrders,
+      totalIncome: dashboard.totalIncome,
+      totalExpense: dashboard.totalExpense,
+      netProfit: dashboard.netProfit
     };
   }
 };

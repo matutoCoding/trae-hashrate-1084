@@ -6,7 +6,8 @@ import {
   soakingService,
   grindingService,
   coagulatingService,
-  pressingService
+  pressingService,
+  dashboardService
 } from '@/services/dataService';
 
 const processList = [
@@ -46,6 +47,7 @@ const processList = [
 
 const ProductionPage: React.FC = () => {
   const [stats, setStats] = useState<any>({});
+  const [dashboard, setDashboard] = useState<any>({});
 
   const loadStats = useCallback(() => {
     setStats({
@@ -56,23 +58,30 @@ const ProductionPage: React.FC = () => {
     });
   }, []);
 
+  const loadDashboard = useCallback(() => {
+    setDashboard(dashboardService.getTodayDashboard());
+  }, []);
+
   useEffect(() => {
     loadStats();
-  }, [loadStats]);
+    loadDashboard();
+  }, [loadStats, loadDashboard]);
 
   useEffect(() => {
     const timer = setInterval(() => {
       loadStats();
+      loadDashboard();
     }, 5000);
     return () => clearInterval(timer);
-  }, [loadStats]);
+  }, [loadStats, loadDashboard]);
 
   const handleRefresh = useCallback(() => {
     loadStats();
+    loadDashboard();
     setTimeout(() => {
       Taro.stopPullDownRefresh();
     }, 500);
-  }, [loadStats]);
+  }, [loadStats, loadDashboard]);
 
   const handleProcessClick = (page: string) => {
     Taro.navigateTo({ url: page });
@@ -95,6 +104,15 @@ const ProductionPage: React.FC = () => {
     }
   };
 
+  const chips = [
+    { icon: '🫘', label: '用豆', value: `${dashboard.beanUsed ?? '-'} kg` },
+    { icon: '🧈', label: '产量', value: `${dashboard.totalOutput ?? '-'} 斤` },
+    { icon: '🚚', label: '配送', value: `${dashboard.deliveryOrders ?? '-'} 单` },
+    { icon: '💰', label: '收入', value: `${dashboard.totalIncome ?? '-'} 元` },
+    { icon: '💸', label: '支出', value: `${dashboard.totalExpense ?? '-'} 元` },
+    { icon: '📈', label: '利润', value: `${dashboard.netProfit ?? '-'} 元`, isProfit: true }
+  ];
+
   return (
     <ScrollView
       scrollY
@@ -104,6 +122,31 @@ const ProductionPage: React.FC = () => {
       <View className={styles.header}>
         <Text className={styles.headerTitle}>🏭 生产管理</Text>
         <Text className={styles.headerDesc}>四大生产环节，全程记录追溯</Text>
+      </View>
+
+      <View className={styles.dashboardSection}>
+        <Text className={styles.dashboardTitle}>📊 今日经营看板</Text>
+        <ScrollView scrollX className={styles.dashboardScroll}>
+          {chips.map(chip => (
+            <View key={chip.label} className={styles.dashboardChip}>
+              <Text className={styles.chipIcon}>{chip.icon}</Text>
+              <View className={styles.chipContent}>
+                <Text className={styles.chipLabel}>{chip.label}</Text>
+                <Text
+                  className={`${styles.chipValue} ${
+                    chip.isProfit
+                      ? (dashboard.netProfit ?? 0) >= 0
+                        ? styles.chipProfit
+                        : styles.chipLoss
+                      : ''
+                  }`}
+                >
+                  {chip.value}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       </View>
 
       <View className={styles.processGrid}>

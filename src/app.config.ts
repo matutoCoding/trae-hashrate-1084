@@ -8,7 +8,8 @@ export default defineAppConfig({
     'pages/soaking/index',
     'pages/grinding/index',
     'pages/coagulating/index',
-    'pages/pressing/index'
+    'pages/pressing/index',
+    'pages/batch/index'
   ],
   window: {
     backgroundTextStyle: 'light',

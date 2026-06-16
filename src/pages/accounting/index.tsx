@@ -4,7 +4,6 @@ import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import {
   accountingService,
-  getNowTime,
   getTodayDate
 } from '@/services/dataService';
 import type { AccountingRecord } from '@/types/production';
@@ -15,6 +14,7 @@ const incomeCategories = [
   { key: '千张销售', label: '千张销售', icon: '🥞' },
   { key: '油豆腐销售', label: '油豆腐销售', icon: '🍤' },
   { key: '豆腐脑销售', label: '豆腐脑销售', icon: '🥣' },
+  { key: '配送收入', label: '配送收入', icon: '🚚' },
   { key: '其他收入', label: '其他收入', icon: '💰' }
 ];
 
@@ -22,11 +22,11 @@ const expenseCategories = [
   { key: '黄豆采购', label: '黄豆采购', icon: '🌱' },
   { key: '凝固剂', label: '凝固剂', icon: '🧂' },
   { key: '食用油', label: '食用油', icon: '🫒' },
-  { key: '燃料水电', label: '燃料水电', icon: '�' },
+  { key: '燃料水电', label: '燃料水电', icon: '🔥' },
   { key: '包装材料', label: '包装材料', icon: '📦' },
   { key: '人工工资', label: '人工工资', icon: '👷' },
-  { key: '设备维护', label: '设备维护', icon: '�' },
-  { key: '其他支出', label: '其他支出', icon: '�' }
+  { key: '设备维护', label: '设备维护', icon: '🔧' },
+  { key: '其他支出', label: '其他支出', icon: '💸' }
 ];
 
 const AccountingPage: React.FC = () => {
@@ -49,7 +49,7 @@ const AccountingPage: React.FC = () => {
     if (filterType !== 'all') {
       allRecords = allRecords.filter(r => r.type === filterType);
     }
-    setRecords(allRecords.sort((a, b) => new Date(b.date + ' ' + (b.time || '')).getTime() - new Date(a.date + ' ' + (a.time || '')).getTime()));
+    setRecords(allRecords.sort((a, b) => b.createdAt - a.createdAt));
   }, [filterType]);
 
   useEffect(() => {
@@ -87,6 +87,7 @@ const AccountingPage: React.FC = () => {
       category: formData.category,
       amount: Number(formData.amount),
       date: formData.date,
+      createdAt: Date.now(),
       description: formData.description,
       note: formData.note
     });
@@ -208,7 +209,7 @@ const AccountingPage: React.FC = () => {
 
         {filterType !== 'income' && (
           <View className={styles.categorySection}>
-            <Text className={styles.sectionSubtitle}>� 支出分类</Text>
+            <Text className={styles.sectionSubtitle}>📉 支出分类</Text>
             <View className={styles.categoryList}>
               {categoryStats.expense.map(cat => (
                 <View key={cat.category} className={styles.categoryItem}>
@@ -242,7 +243,7 @@ const AccountingPage: React.FC = () => {
               const allCategories = [...incomeCategories, ...expenseCategories];
               const cat = allCategories.find(c => c.key === record.category);
               return (
-                <View key={record.id} className={styles.recordCard} onClick={() => handleDelete(record.id)}>
+                <View key={record.id} className={styles.recordCard}>
                   <View className={styles.recordIcon}>
                     {record.type === 'income' ? '📈' : '📉'}
                   </View>
@@ -253,14 +254,16 @@ const AccountingPage: React.FC = () => {
                     </Text>
                     <Text className={styles.recordDate}>{record.date}</Text>
                   </View>
-                  <View className={styles.recordAmount}>
+                  <View className={styles.recordRight}>
                     <Text className={record.type === 'income' ? styles.amountIncome : styles.amountExpense}>
                       {record.type === 'income' ? '+' : '-'}{record.amount.toFixed(2)}
                     </Text>
+                    <Text className={styles.deleteBtn} onClick={() => handleDelete(record.id)}>✕</Text>
                   </View>
                 </View>
               );
             })}
+            <Text className={styles.deleteHint}>长按可删除</Text>
           </View>
         )}
       </View>
