@@ -87,6 +87,14 @@ const ProductionPage: React.FC = () => {
     Taro.navigateTo({ url: page });
   };
 
+  const handleChipClick = (page: string, isTab: boolean) => {
+    if (isTab) {
+      Taro.switchTab({ url: page });
+    } else {
+      Taro.navigateTo({ url: page });
+    }
+  };
+
   const getStatText = (key: string) => {
     const s = stats[key];
     if (!s) return { main: '-', sub: '' };
@@ -105,12 +113,12 @@ const ProductionPage: React.FC = () => {
   };
 
   const chips = [
-    { icon: '🫘', label: '用豆', value: `${dashboard.beanUsed ?? '-'} kg` },
-    { icon: '🧈', label: '产量', value: `${dashboard.totalOutput ?? '-'} 斤` },
-    { icon: '🚚', label: '配送', value: `${dashboard.deliveryOrders ?? '-'} 单` },
-    { icon: '💰', label: '收入', value: `${dashboard.totalIncome ?? '-'} 元` },
-    { icon: '💸', label: '支出', value: `${dashboard.totalExpense ?? '-'} 元` },
-    { icon: '📈', label: '利润', value: `${dashboard.netProfit ?? '-'} 元`, isProfit: true }
+    { icon: '🫘', label: '用豆', value: `${dashboard.beanUsed ?? '-'} kg`, page: '/pages/soaking/index', isTab: false },
+    { icon: '🧈', label: '产量', value: `${dashboard.totalOutput ?? '-'} 斤`, page: '/pages/pressing/index', isTab: false },
+    { icon: '🚚', label: '配送', value: `${dashboard.deliveryOrders ?? '-'} 单`, page: '/pages/delivery/index', isTab: true },
+    { icon: '💰', label: '收入', value: `${dashboard.totalIncome ?? '-'} 元`, page: '/pages/accounting/index', isTab: true },
+    { icon: '💸', label: '支出', value: `${dashboard.totalExpense ?? '-'} 元`, page: '/pages/accounting/index', isTab: true },
+    { icon: '📈', label: '利润', value: `${dashboard.netProfit ?? '-'} 元`, isProfit: true, page: '/pages/accounting/index', isTab: true }
   ];
 
   return (
@@ -128,7 +136,7 @@ const ProductionPage: React.FC = () => {
         <Text className={styles.dashboardTitle}>📊 今日经营看板</Text>
         <ScrollView scrollX className={styles.dashboardScroll}>
           {chips.map(chip => (
-            <View key={chip.label} className={styles.dashboardChip}>
+            <View key={chip.label} className={styles.dashboardChip} onClick={() => chip.page && handleChipClick(chip.page, chip.isTab ?? false)}>
               <Text className={styles.chipIcon}>{chip.icon}</Text>
               <View className={styles.chipContent}>
                 <Text className={styles.chipLabel}>{chip.label}</Text>

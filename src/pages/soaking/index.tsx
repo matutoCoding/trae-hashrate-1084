@@ -2,8 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, Input, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import { soakingService, getNowTime } from '@/services/dataService';
-import type { SoakingRecord } from '@/types/production';
+import { soakingService, getNowTime, batchService } from '@/services/dataService';
+import type { SoakingRecord, BatchRecord } from '@/types/production';
 
 const statusTextMap: Record<string, string> = {
   pending: '待开始',
@@ -13,6 +13,7 @@ const statusTextMap: Record<string, string> = {
 
 const SoakingPage: React.FC = () => {
   const [records, setRecords] = useState<SoakingRecord[]>([]);
+  const [batches, setBatches] = useState<BatchRecord[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     beanType: '东北大豆',
@@ -27,6 +28,8 @@ const SoakingPage: React.FC = () => {
   const loadData = useCallback(() => {
     const data = soakingService.getAll();
     setRecords(data);
+    const batchesData = batchService.getAll();
+    setBatches(batchesData);
   }, []);
 
   useEffect(() => {
@@ -59,7 +62,7 @@ const SoakingPage: React.FC = () => {
       return;
     }
 
-    soakingService.add({
+    const { batch } = soakingService.addWithBatch({
       beanType: formData.beanType,
       beanWeight: Number(formData.beanWeight),
       startTime: formData.startTime || getNowTime(),
@@ -69,7 +72,7 @@ const SoakingPage: React.FC = () => {
       note: formData.note
     });
 
-    Taro.showToast({ title: '添加成功', icon: 'success' });
+    Taro.showToast({ title: `批次 ${batch.batchNo} 创建成功`, icon: 'success' });
     setShowForm(false);
     loadData();
   };
@@ -102,6 +105,12 @@ const SoakingPage: React.FC = () => {
         }
       }
     });
+  };
+
+  const handleCardClick = (record: SoakingRecord) => {
+    if (record.batchId) {
+      Taro.navigateTo({ url: `/pages/batch/index?id=${record.batchId}` });
+    }
   };
 
   const stats = soakingService.getTodayStats();
@@ -141,71 +150,74 @@ const SoakingPage: React.FC = () => {
           <View className={styles.emptyState}>暂无记录，点击右上角新增</View>
         ) : (
           <View className={styles.recordList}>
-            {records.map(record => (
-              <View key={record.id} className={styles.recordCard}>
-                <View className={styles.recordHeader}>
-                  <Text className={styles.recordTitle}>
-                    {record.beanType} - {record.beanWeight}kg
-                  </Text>
-                  <Text className={`${styles.statusTag} ${styles[record.status]}`}>
-                    {statusTextMap[record.status]}
-                  </Text>
-                </View>
-
-                <View className={styles.recordInfo}>
-                  <View className={styles.recordInfoItem}>
-                    <Text className={styles.recordInfoLabel}>开始时间:</Text>
-                    <Text className={styles.recordInfoValue}>{record.startTime}</Text>
-                  </View>
-                  <View className={styles.recordInfoItem}>
-                    <Text className={styles.recordInfoLabel}>预计时长:</Text>
-                    <Text className={styles.recordInfoValue}>{record.expectedDuration}h</Text>
-                  </View>
-                  <View className={styles.recordInfoItem}>
-                    <Text className={styles.recordInfoLabel}>水温:</Text>
-                    <Text className={styles.recordInfoValue}>{record.waterTemperature}℃</Text>
-                  </View>
-                  {record.actualDuration && (
-                    <View className={styles.recordInfoItem}>
-                      <Text className={styles.recordInfoLabel}>实际时长:</Text>
-                      <Text className={styles.recordInfoValue}>{record.actualDuration}h</Text>
-                    </View>
-                  )}
-                </View>
-
-                {record.note && (
-                  <Text className={styles.recordNote}>备注: {record.note}</Text>
-                )}
-
-                <View className={styles.recordFooter}>
-                  <Text className={styles.recordOperator}>操作人: {record.operator}</Text>
-                  <View className={styles.recordActions}>
-                    {record.status === 'pending' && (
-                      <Text
-                        className={`${styles.actionBtn} ${styles.primary}`}
-                        onClick={() => handleStart(record.id)}
-                      >
-                        开始
-                      </Text>
-                    )}
-                    {record.status === 'in_progress' && (
-                      <Text
-                        className={`${styles.actionBtn} ${styles.success}`}
-                        onClick={() => handleComplete(record.id)}
-                      >
-                        完成
-                      </Text>
-                    )}
-                    <Text
-                      className={`${styles.actionBtn} ${styles.danger}`}
-                      onClick={() => handleDelete(record.id)}
-                    >
-                      删除
+            {records.map(record => {
+              const batchNo = record.batchId ? batches.find(b => b.id === record.batchId)?.batchNo : undefined;
+              return (
+                <View key={record.id} className={styles.recordCard} onClick={() => handleCardClick(record)}>
+                  <View className={styles.recordHeader}>
+                    <Text className={styles.recordTitle}>
+                      {batchNo ? `${batchNo} · ` : ''}{record.beanType} - {record.beanWeight}kg
+                    </Text>
+                    <Text className={`${styles.statusTag} ${styles[record.status]}`}>
+                      {statusTextMap[record.status]}
                     </Text>
                   </View>
+
+                  <View className={styles.recordInfo}>
+                    <View className={styles.recordInfoItem}>
+                      <Text className={styles.recordInfoLabel}>开始时间:</Text>
+                      <Text className={styles.recordInfoValue}>{record.startTime}</Text>
+                    </View>
+                    <View className={styles.recordInfoItem}>
+                      <Text className={styles.recordInfoLabel}>预计时长:</Text>
+                      <Text className={styles.recordInfoValue}>{record.expectedDuration}h</Text>
+                    </View>
+                    <View className={styles.recordInfoItem}>
+                      <Text className={styles.recordInfoLabel}>水温:</Text>
+                      <Text className={styles.recordInfoValue}>{record.waterTemperature}℃</Text>
+                    </View>
+                    {record.actualDuration && (
+                      <View className={styles.recordInfoItem}>
+                        <Text className={styles.recordInfoLabel}>实际时长:</Text>
+                        <Text className={styles.recordInfoValue}>{record.actualDuration}h</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {record.note && (
+                    <Text className={styles.recordNote}>备注: {record.note}</Text>
+                  )}
+
+                  <View className={styles.recordFooter}>
+                    <Text className={styles.recordOperator}>操作人: {record.operator}</Text>
+                    <View className={styles.recordActions}>
+                      {record.status === 'pending' && (
+                        <Text
+                          className={`${styles.actionBtn} ${styles.primary}`}
+                          onClick={(e) => { e.stopPropagation(); handleStart(record.id); }}
+                        >
+                          开始
+                        </Text>
+                      )}
+                      {record.status === 'in_progress' && (
+                        <Text
+                          className={`${styles.actionBtn} ${styles.success}`}
+                          onClick={(e) => { e.stopPropagation(); handleComplete(record.id); }}
+                        >
+                          完成
+                        </Text>
+                      )}
+                      <Text
+                        className={`${styles.actionBtn} ${styles.danger}`}
+                        onClick={(e) => { e.stopPropagation(); handleDelete(record.id); }}
+                      >
+                        删除
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </View>

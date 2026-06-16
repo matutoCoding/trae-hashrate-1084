@@ -5,9 +5,10 @@ import styles from './index.module.scss';
 import {
   marinatingService,
   fryingService,
+  batchService,
   getNowTime
 } from '@/services/dataService';
-import type { MarinatingRecord, FryingRecord } from '@/types/production';
+import type { MarinatingRecord, FryingRecord, BatchRecord } from '@/types/production';
 
 const statusTextMap: Record<string, string> = {
   pending: '待开始',
@@ -27,6 +28,7 @@ const FryingPage: React.FC = () => {
   const [marinatingRecords, setMarinatingRecords] = useState<MarinatingRecord[]>([]);
   const [fryingRecords, setFryingRecords] = useState<FryingRecord[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [activeBatches, setActiveBatches] = useState<BatchRecord[]>([]);
 
   const [marinatingForm, setMarinatingForm] = useState({
     productType: 'dried_tofu' as 'dried_tofu' | 'tofu_puff',
@@ -36,7 +38,8 @@ const FryingPage: React.FC = () => {
     duration: '60',
     temperature: '80',
     operator: '李师傅',
-    note: ''
+    note: '',
+    batchId: ''
   });
 
   const [fryingForm, setFryingForm] = useState({
@@ -47,12 +50,14 @@ const FryingPage: React.FC = () => {
     startTime: '',
     duration: '10',
     operator: '王师傅',
-    note: ''
+    note: '',
+    batchId: ''
   });
 
   const loadData = useCallback(() => {
     setMarinatingRecords(marinatingService.getAll());
     setFryingRecords(fryingService.getAll());
+    setActiveBatches(batchService.getActive());
   }, []);
 
   useEffect(() => {
@@ -83,7 +88,8 @@ const FryingPage: React.FC = () => {
         duration: '60',
         temperature: '80',
         operator: '李师傅',
-        note: ''
+        note: '',
+        batchId: ''
       });
     } else {
       setFryingForm({
@@ -94,7 +100,8 @@ const FryingPage: React.FC = () => {
         startTime: getNowTime(),
         duration: '10',
         operator: '王师傅',
-        note: ''
+        note: '',
+        batchId: ''
       });
     }
     setShowForm(true);
@@ -114,7 +121,8 @@ const FryingPage: React.FC = () => {
       duration: Number(marinatingForm.duration),
       temperature: Number(marinatingForm.temperature),
       operator: marinatingForm.operator,
-      note: marinatingForm.note
+      note: marinatingForm.note,
+      batchId: marinatingForm.batchId || undefined
     });
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
@@ -136,7 +144,8 @@ const FryingPage: React.FC = () => {
       startTime: fryingForm.startTime || getNowTime(),
       duration: Number(fryingForm.duration),
       operator: fryingForm.operator,
-      note: fryingForm.note
+      note: fryingForm.note,
+      batchId: fryingForm.batchId || undefined
     });
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
@@ -422,6 +431,18 @@ const FryingPage: React.FC = () => {
               {activeTab === 'marinating' ? (
                 <>
                   <View className={styles.formGroup}>
+                    <Text className={styles.formLabel}>关联批次</Text>
+                    <View className={styles.formRadioGroup}>
+                      <Text className={`${styles.formRadioItem} ${!marinatingForm.batchId ? styles.active : ''}`} onClick={() => setMarinatingForm({ ...marinatingForm, batchId: '' })}>不关联</Text>
+                      {activeBatches.map(b => (
+                        <Text key={b.id} className={`${styles.formRadioItem} ${marinatingForm.batchId === b.id ? styles.active : ''}`} onClick={() => setMarinatingForm({ ...marinatingForm, batchId: b.id })}>
+                          {b.batchNo} ({b.beanWeight}kg)
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View className={styles.formGroup}>
                     <Text className={styles.formLabel}>产品类型</Text>
                     <View className={styles.formRadioGroup}>
                       {productOptions.map(opt => (
@@ -527,6 +548,18 @@ const FryingPage: React.FC = () => {
                 </>
               ) : (
                 <>
+                  <View className={styles.formGroup}>
+                    <Text className={styles.formLabel}>关联批次</Text>
+                    <View className={styles.formRadioGroup}>
+                      <Text className={`${styles.formRadioItem} ${!fryingForm.batchId ? styles.active : ''}`} onClick={() => setFryingForm({ ...fryingForm, batchId: '' })}>不关联</Text>
+                      {activeBatches.map(b => (
+                        <Text key={b.id} className={`${styles.formRadioItem} ${fryingForm.batchId === b.id ? styles.active : ''}`} onClick={() => setFryingForm({ ...fryingForm, batchId: b.id })}>
+                          {b.batchNo} ({b.beanWeight}kg)
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+
                   <View className={styles.formGroup}>
                     <Text className={styles.formLabel}>产品类型</Text>
                     <View className={styles.formRadioGroup}>

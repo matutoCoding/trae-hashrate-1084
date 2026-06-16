@@ -2,8 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, Input, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import { grindingService, boilingService, getNowTime } from '@/services/dataService';
-import type { GrindingRecord, BoilingRecord } from '@/types/production';
+import { grindingService, boilingService, getNowTime, batchService } from '@/services/dataService';
+import type { GrindingRecord, BoilingRecord, BatchRecord } from '@/types/production';
 
 const statusTextMap: Record<string, string> = {
   pending: '待开始',
@@ -15,6 +15,7 @@ const GrindingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'grinding' | 'boiling'>('grinding');
   const [grindingRecords, setGrindingRecords] = useState<GrindingRecord[]>([]);
   const [boilingRecords, setBoilingRecords] = useState<BoilingRecord[]>([]);
+  const [activeBatches, setActiveBatches] = useState<BatchRecord[]>([]);
   const [showForm, setShowForm] = useState(false);
 
   const [grindingForm, setGrindingForm] = useState({
@@ -26,7 +27,8 @@ const GrindingPage: React.FC = () => {
     soyMilkAmount: '',
     okaraAmount: '',
     operator: '王师傅',
-    note: ''
+    note: '',
+    batchId: ''
   });
 
   const [boilingForm, setBoilingForm] = useState({
@@ -37,12 +39,14 @@ const GrindingPage: React.FC = () => {
     antiFoamUsed: false,
     antiFoamAmount: '',
     operator: '王师傅',
-    note: ''
+    note: '',
+    batchId: ''
   });
 
   const loadData = useCallback(() => {
     setGrindingRecords(grindingService.getAll());
     setBoilingRecords(boilingService.getAll());
+    setActiveBatches(batchService.getActive());
   }, []);
 
   useEffect(() => {
@@ -67,7 +71,8 @@ const GrindingPage: React.FC = () => {
         soyMilkAmount: '',
         okaraAmount: '',
         operator: '王师傅',
-        note: ''
+        note: '',
+        batchId: ''
       });
     } else {
       setBoilingForm({
@@ -78,7 +83,8 @@ const GrindingPage: React.FC = () => {
         antiFoamUsed: false,
         antiFoamAmount: '',
         operator: '王师傅',
-        note: ''
+        note: '',
+        batchId: ''
       });
     }
     setShowForm(true);
@@ -99,7 +105,8 @@ const GrindingPage: React.FC = () => {
       soyMilkAmount: grindingForm.soyMilkAmount ? Number(grindingForm.soyMilkAmount) : undefined,
       okaraAmount: grindingForm.okaraAmount ? Number(grindingForm.okaraAmount) : undefined,
       operator: grindingForm.operator,
-      note: grindingForm.note
+      note: grindingForm.note,
+      batchId: grindingForm.batchId || undefined
     });
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
@@ -121,7 +128,8 @@ const GrindingPage: React.FC = () => {
       antiFoamUsed: boilingForm.antiFoamUsed,
       antiFoamAmount: boilingForm.antiFoamAmount ? Number(boilingForm.antiFoamAmount) : undefined,
       operator: boilingForm.operator,
-      note: boilingForm.note
+      note: boilingForm.note,
+      batchId: boilingForm.batchId || undefined
     });
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
@@ -414,6 +422,18 @@ const GrindingPage: React.FC = () => {
             <ScrollView scrollY className={styles.formBody}>
               {activeTab === 'grinding' ? (
                 <>
+                  <View className={styles.formGroup}>
+                    <Text className={styles.formLabel}>关联批次</Text>
+                    <View className={styles.formRadioGroup}>
+                      <Text className={`${styles.formRadioItem} ${!grindingForm.batchId ? styles.active : ''}`} onClick={() => setGrindingForm({ ...grindingForm, batchId: '' })}>不关联</Text>
+                      {activeBatches.map(b => (
+                        <Text key={b.id} className={`${styles.formRadioItem} ${grindingForm.batchId === b.id ? styles.active : ''}`} onClick={() => setGrindingForm({ ...grindingForm, batchId: b.id })}>
+                          {b.batchNo} ({b.beanWeight}kg)
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+
                   <View className={styles.formRow}>
                     <View className={styles.formRowItem}>
                       <View className={styles.formGroup}>
@@ -527,6 +547,18 @@ const GrindingPage: React.FC = () => {
                 </>
               ) : (
                 <>
+                  <View className={styles.formGroup}>
+                    <Text className={styles.formLabel}>关联批次</Text>
+                    <View className={styles.formRadioGroup}>
+                      <Text className={`${styles.formRadioItem} ${!boilingForm.batchId ? styles.active : ''}`} onClick={() => setBoilingForm({ ...boilingForm, batchId: '' })}>不关联</Text>
+                      {activeBatches.map(b => (
+                        <Text key={b.id} className={`${styles.formRadioItem} ${boilingForm.batchId === b.id ? styles.active : ''}`} onClick={() => setBoilingForm({ ...boilingForm, batchId: b.id })}>
+                          {b.batchNo} ({b.beanWeight}kg)
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+
                   <View className={styles.formRow}>
                     <View className={styles.formRowItem}>
                       <View className={styles.formGroup}>

@@ -2,8 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, Input, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import { pressingService, getNowTime } from '@/services/dataService';
-import type { PressingRecord } from '@/types/production';
+import { pressingService, batchService, getNowTime } from '@/services/dataService';
+import type { PressingRecord, BatchRecord } from '@/types/production';
 
 const statusTextMap: Record<string, string> = {
   pending: '待开始',
@@ -20,6 +20,7 @@ const productTypes = [
 
 const PressingPage: React.FC = () => {
   const [records, setRecords] = useState<PressingRecord[]>([]);
+  const [activeBatches, setActiveBatches] = useState<BatchRecord[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     productType: 'tofu' as 'tofu' | 'tofu_pudding' | 'dried_tofu' | 'tofu_skin',
@@ -28,12 +29,15 @@ const PressingPage: React.FC = () => {
     pressDuration: '40',
     pressWeight: '20',
     operator: '王师傅',
-    note: ''
+    note: '',
+    batchId: ''
   });
 
   const loadData = useCallback(() => {
     const data = pressingService.getAll();
     setRecords(data);
+    const batches = batchService.getActive();
+    setActiveBatches(batches);
   }, []);
 
   useEffect(() => {
@@ -55,7 +59,8 @@ const PressingPage: React.FC = () => {
       pressDuration: '40',
       pressWeight: '20',
       operator: '王师傅',
-      note: ''
+      note: '',
+      batchId: ''
     });
     setShowForm(true);
   };
@@ -73,7 +78,8 @@ const PressingPage: React.FC = () => {
       pressDuration: Number(formData.pressDuration),
       pressWeight: Number(formData.pressWeight),
       operator: formData.operator,
-      note: formData.note
+      note: formData.note,
+      batchId: formData.batchId || undefined
     });
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
@@ -218,6 +224,18 @@ const PressingPage: React.FC = () => {
             </View>
 
             <ScrollView scrollY className={styles.formBody}>
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>关联批次</Text>
+                <View className={styles.formRadioGroup}>
+                  <Text className={`${styles.formRadioItem} ${!formData.batchId ? styles.active : ''}`} onClick={() => setFormData({ ...formData, batchId: '' })}>不关联</Text>
+                  {activeBatches.map(b => (
+                    <Text key={b.id} className={`${styles.formRadioItem} ${formData.batchId === b.id ? styles.active : ''}`} onClick={() => setFormData({ ...formData, batchId: b.id })}>
+                      {b.batchNo} ({b.beanWeight}kg)
+                    </Text>
+                  ))}
+                </View>
+              </View>
+
               <View className={styles.formGroup}>
                 <Text className={styles.formLabel}>产品类型</Text>
                 <View className={styles.formRadioGroup}>

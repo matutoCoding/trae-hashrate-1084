@@ -147,14 +147,18 @@ export const batchService = {
   }
 };
 
-function createCrudService<T extends { id: string }>(storageKey: string, idPrefix: string) {
+function createCrudService<T extends { id: string; status?: string }>(storageKey: string, idPrefix: string) {
   return {
     getAll(): T[] {
       return storage.get<T[]>(storageKey, []);
     },
     add(data: Omit<T, 'id'>): T {
       const records = this.getAll();
-      const newRecord = { ...data, id: generateId(idPrefix) } as T;
+      const baseRecord: any = { ...data, id: generateId(idPrefix) };
+      if (baseRecord.status === undefined || baseRecord.status === null) {
+        baseRecord.status = 'pending';
+      }
+      const newRecord = baseRecord as T;
       records.unshift(newRecord);
       storage.set(storageKey, records);
       return newRecord;
@@ -179,6 +183,25 @@ function createCrudService<T extends { id: string }>(storageKey: string, idPrefi
 export const soakingService = {
   ...createCrudService<SoakingRecord>(STORAGE_KEYS.SOAKING, 's'),
 
+  addWithBatch(data: Omit<SoakingRecord, 'id' | 'batchId'>): { soaking: SoakingRecord; batch: BatchRecord } {
+    const newSoaking = this.add(data);
+    const newBatch = batchService.add({
+      batchNo: batchService.generateBatchNo(),
+      beanType: data.beanType,
+      beanWeight: data.beanWeight,
+      createdAt: getNowTime(),
+      status: 'active',
+      soakingId: newSoaking.id
+    });
+    this.update(newSoaking.id, { batchId: newBatch.id });
+    const updatedSoaking = this.getById(newSoaking.id)!;
+    return { soaking: updatedSoaking, batch: newBatch };
+  },
+
+  getById(id: string): SoakingRecord | null {
+    return this.getAll().find(r => r.id === id) || null;
+  },
+
   getTodayStats() {
     const records = this.getAll();
     const today = getTodayDate();
@@ -194,6 +217,18 @@ export const soakingService = {
 
 export const grindingService = {
   ...createCrudService<GrindingRecord>(STORAGE_KEYS.GRINDING, 'g'),
+
+  add(data: Omit<GrindingRecord, 'id'>): GrindingRecord {
+    const newRecord = createCrudService<GrindingRecord>(STORAGE_KEYS.GRINDING, 'g').add(data);
+    if (data.batchId) {
+      batchService.update(data.batchId, { grindingId: newRecord.id });
+    }
+    return newRecord;
+  },
+
+  getById(id: string): GrindingRecord | null {
+    return this.getAll().find(r => r.id === id) || null;
+  },
 
   getTodayStats() {
     const records = this.getAll();
@@ -228,6 +263,18 @@ export const boilingService = {
 export const coagulatingService = {
   ...createCrudService<CoagulatingRecord>(STORAGE_KEYS.COAGULATING, 'c'),
 
+  add(data: Omit<CoagulatingRecord, 'id'>): CoagulatingRecord {
+    const newRecord = createCrudService<CoagulatingRecord>(STORAGE_KEYS.COAGULATING, 'c').add(data);
+    if (data.batchId) {
+      batchService.update(data.batchId, { coagulatingId: newRecord.id });
+    }
+    return newRecord;
+  },
+
+  getById(id: string): CoagulatingRecord | null {
+    return this.getAll().find(r => r.id === id) || null;
+  },
+
   getTodayStats() {
     const records = this.getAll();
     const today = getTodayDate();
@@ -245,6 +292,18 @@ export const coagulatingService = {
 
 export const pressingService = {
   ...createCrudService<PressingRecord>(STORAGE_KEYS.PRESSING, 'p'),
+
+  add(data: Omit<PressingRecord, 'id'>): PressingRecord {
+    const newRecord = createCrudService<PressingRecord>(STORAGE_KEYS.PRESSING, 'p').add(data);
+    if (data.batchId) {
+      batchService.update(data.batchId, { pressingId: newRecord.id });
+    }
+    return newRecord;
+  },
+
+  getById(id: string): PressingRecord | null {
+    return this.getAll().find(r => r.id === id) || null;
+  },
 
   getTodayStats() {
     const records = this.getAll();
@@ -270,6 +329,18 @@ export const pressingService = {
 export const marinatingService = {
   ...createCrudService<MarinatingRecord>(STORAGE_KEYS.MARINATING, 'm'),
 
+  add(data: Omit<MarinatingRecord, 'id'>): MarinatingRecord {
+    const newRecord = createCrudService<MarinatingRecord>(STORAGE_KEYS.MARINATING, 'm').add(data);
+    if (data.batchId) {
+      batchService.update(data.batchId, { marinatingId: newRecord.id });
+    }
+    return newRecord;
+  },
+
+  getById(id: string): MarinatingRecord | null {
+    return this.getAll().find(r => r.id === id) || null;
+  },
+
   getTodayStats() {
     const records = this.getAll();
     const today = getTodayDate();
@@ -285,6 +356,18 @@ export const marinatingService = {
 
 export const fryingService = {
   ...createCrudService<FryingRecord>(STORAGE_KEYS.FRYING, 'f'),
+
+  add(data: Omit<FryingRecord, 'id'>): FryingRecord {
+    const newRecord = createCrudService<FryingRecord>(STORAGE_KEYS.FRYING, 'f').add(data);
+    if (data.batchId) {
+      batchService.update(data.batchId, { fryingId: newRecord.id });
+    }
+    return newRecord;
+  },
+
+  getById(id: string): FryingRecord | null {
+    return this.getAll().find(r => r.id === id) || null;
+  },
 
   getTodayStats() {
     const records = this.getAll();

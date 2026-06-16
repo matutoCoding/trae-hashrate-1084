@@ -2,8 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, Input, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import { coagulatingService, getNowTime } from '@/services/dataService';
-import type { CoagulatingRecord } from '@/types/production';
+import { coagulatingService, batchService, getNowTime } from '@/services/dataService';
+import type { CoagulatingRecord, BatchRecord } from '@/types/production';
 
 const statusTextMap: Record<string, string> = {
   pending: '待开始',
@@ -13,6 +13,7 @@ const statusTextMap: Record<string, string> = {
 
 const CoagulatingPage: React.FC = () => {
   const [records, setRecords] = useState<CoagulatingRecord[]>([]);
+  const [activeBatches, setActiveBatches] = useState<BatchRecord[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     soyMilkAmount: '',
@@ -22,12 +23,15 @@ const CoagulatingPage: React.FC = () => {
     restingDuration: '20',
     temperature: '85',
     operator: '王师傅',
-    note: ''
+    note: '',
+    batchId: ''
   });
 
   const loadData = useCallback(() => {
     const data = coagulatingService.getAll();
     setRecords(data);
+    const batches = batchService.getActive();
+    setActiveBatches(batches);
   }, []);
 
   useEffect(() => {
@@ -50,7 +54,8 @@ const CoagulatingPage: React.FC = () => {
       restingDuration: '20',
       temperature: '85',
       operator: '王师傅',
-      note: ''
+      note: '',
+      batchId: ''
     });
     setShowForm(true);
   };
@@ -69,7 +74,8 @@ const CoagulatingPage: React.FC = () => {
       restingDuration: Number(formData.restingDuration),
       temperature: Number(formData.temperature),
       operator: formData.operator,
-      note: formData.note
+      note: formData.note,
+      batchId: formData.batchId || undefined
     });
 
     Taro.showToast({ title: '添加成功', icon: 'success' });
@@ -216,6 +222,18 @@ const CoagulatingPage: React.FC = () => {
             </View>
 
             <ScrollView scrollY className={styles.formBody}>
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>关联批次</Text>
+                <View className={styles.formRadioGroup}>
+                  <Text className={`${styles.formRadioItem} ${!formData.batchId ? styles.active : ''}`} onClick={() => setFormData({ ...formData, batchId: '' })}>不关联</Text>
+                  {activeBatches.map(b => (
+                    <Text key={b.id} className={`${styles.formRadioItem} ${formData.batchId === b.id ? styles.active : ''}`} onClick={() => setFormData({ ...formData, batchId: b.id })}>
+                      {b.batchNo} ({b.beanWeight}kg)
+                    </Text>
+                  ))}
+                </View>
+              </View>
+
               <View className={styles.formGroup}>
                 <Text className={styles.formLabel}>凝固剂类型</Text>
                 <View className={styles.formRadioGroup}>
